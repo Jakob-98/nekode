@@ -15,8 +15,6 @@ enum PetPhysics {
     static let edgeMargin: CGFloat = 20          // distance from screen edges
     static let appearDuration: Double = 0.4
     static let disappearDuration: Double = 0.3
-    /// How often idle pets re-check the mouse position (seconds)
-    static let idleRetargetInterval: Double = 8
     /// How close (pts) before pet considers itself "arrived"
     static let arrivalThreshold: CGFloat = 30
     /// How close attention-seeking pets must be to mouse before stopping
@@ -98,7 +96,7 @@ enum PetAnimationEngine {
         let framesToAdvance = Int(pet.frameAccumulator)
         if framesToAdvance > 0 {
             pet.frameAccumulator -= Double(framesToAdvance)
-            let maxFrames = pet.state.frameCount(for: pet.kind)
+            let maxFrames = pet.visualState.frameCount(for: pet.kind)
             if pet.state.loops {
                 pet.currentFrame = (
                     pet.currentFrame + framesToAdvance
@@ -187,69 +185,28 @@ enum PetAnimationEngine {
         }
     }
 
-    // MARK: - Idle Resting (sitting/working — gently walks toward mouse, then rests)
+    // MARK: - Idle Resting (sitting/working — walks to home spot, then rests)
 
     static func updateIdleResting(
         _ pet: PetModel, dt: TimeInterval, screenBounds: CGRect
     ) {
-        let now = Date()
-
-        // Periodically update target to mouse position
-        let shouldRetarget: Bool
-        if pet.target == nil {
-            shouldRetarget = true
-        } else if let lastRetarget = pet.lastTargetUpdate,
-                  now.timeIntervalSince(lastRetarget)
-                      > PetPhysics.idleRetargetInterval {
-            shouldRetarget = true
-        } else {
-            shouldRetarget = false
-        }
-
-        if shouldRetarget {
-            let mouse = NSEvent.mouseLocation
-            let clampedX = max(
-                screenBounds.minX + PetPhysics.edgeMargin,
-                min(screenBounds.maxX - PetPhysics.edgeMargin, mouse.x)
-            )
-            let clampedY = max(
-                screenBounds.minY + PetPhysics.edgeMargin,
-                min(screenBounds.maxY - PetPhysics.edgeMargin, mouse.y)
-            )
-            let clampedTarget = CGPoint(x: clampedX, y: clampedY)
-            // Only update if mouse moved significantly
-            if let current = pet.target {
-                let dx = clampedTarget.x - current.x
-                let dy = clampedTarget.y - current.y
-                let dist = sqrt(dx * dx + dy * dy)
-                if dist < PetPhysics.arrivalThreshold {
-                    // Mouse hasn't moved enough — stay put
-                    pet.lastTargetUpdate = now
-                } else {
-                    pet.target = clampedTarget
-                    pet.lastTargetUpdate = now
-                }
-            } else {
-                pet.target = clampedTarget
-                pet.lastTargetUpdate = now
-            }
-        }
-
-        guard let target = pet.target else {
+        // Home spot is where the user last dropped the pet (or spawn position)
+        guard let home = pet.lastDropPosition else {
             pet.velocity = .zero
             return
         }
 
-        let dx = target.x - pet.position.x
-        let dy = target.y - pet.position.y
+        let dx = home.x - pet.position.x
+        let dy = home.y - pet.position.y
         let dist = sqrt(dx * dx + dy * dy)
+
         if dist < PetPhysics.arrivalThreshold {
-            // Arrived near mouse — rest here
+            // Arrived at home — rest here
             pet.velocity = .zero
         } else {
-            // Walk toward target at a leisurely pace
+            // Walk toward home spot at a leisurely pace
             let vel = velocityToward(
-                from: pet.position, to: target,
+                from: pet.position, to: home,
                 speed: PetPhysics.idleWalkSpeed
             )
             pet.velocity = vel
@@ -313,10 +270,10 @@ enum PetAnimationEngine {
         let text = bubbleText(for: pet)
         if let text {
             pet.activeBubbleText = text
-            pet.bubbleTimeRemaining = Double.random(in: 3...5)
-            pet.bubbleCooldown = Double.random(in: 12...25)
+            pet.bubbleTimeRemaining = Double.random(in: 2.5...4)
+            pet.bubbleCooldown = Double.random(in: 45...90)
         } else {
-            pet.bubbleCooldown = Double.random(in: 8...15)
+            pet.bubbleCooldown = Double.random(in: 30...60)
         }
     }
 
@@ -326,33 +283,19 @@ enum PetAnimationEngine {
             // Working state — pet is chilling while agent codes
             return [
                 "coding...",
-                "writing code",
                 "thinking...",
                 "building...",
-                "refactoring",
                 "fixing bugs",
                 "almost done",
-                "one more test",
             ].randomElement()
         case .sleeping:
             return [
                 "zzz",
                 "...",
-                "done!",
-                "all good",
-                "chilling",
-            ].randomElement()
-        case .walking, .running:
-            // Roaming or attention seeking
-            return [
-                "exploring",
-                "wandering",
-                "on the move",
             ].randomElement()
         case .alerting:
             return [
                 "hey!",
-                "look here!",
                 "need input",
                 "waiting...",
             ].randomElement()
@@ -360,13 +303,9 @@ enum PetAnimationEngine {
             return [
                 "approve?",
                 "permission?",
-                "allow this?",
             ].randomElement()
         case .spinning:
-            return [
-                "compacting...",
-                "cleaning up",
-            ].randomElement()
+            return ["compacting..."].randomElement()
         default:
             return nil
         }
@@ -389,7 +328,6 @@ enum PetAnimationEngine {
         if oldState.isAttentionSeeking != newState.isAttentionSeeking
             || oldState.isMoving != newState.isMoving {
             pet.target = nil
-            pet.lastTargetUpdate = nil
         }
 
         // Reset roaming when entering a moving state

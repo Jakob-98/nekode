@@ -25,13 +25,13 @@ class PetModel: ObservableObject, Identifiable {
     @Published var isDragging: Bool = false
     var target: CGPoint?                 // Where to move toward (nil = roaming)
     var roamPauseUntil: Date?            // Random pause during roaming
-    var lastTargetUpdate: Date?          // When idle target was last updated
+    var lastDropPosition: CGPoint?       // Where user last dropped the pet (its "home")
 
     // MARK: - Speech Bubbles
 
     @Published var activeBubbleText: String?
     var bubbleTimeRemaining: Double = 0  // How long current bubble stays
-    var bubbleCooldown: Double = 5       // Seconds until next bubble check
+    var bubbleCooldown: Double = 15      // Seconds until next bubble check
 
     // MARK: - Lifecycle
 
@@ -45,6 +45,15 @@ class PetModel: ObservableObject, Identifiable {
 
     var displayName: String { session.displayName }
     var needsAttention: Bool { session.status.needsAttention }
+
+    /// The visual state for sprite rendering — uses walking animation while
+    /// the pet is moving to its home spot, even if logical state is sitting.
+    var visualState: PetState {
+        if state == .sitting && velocity != .zero {
+            return .walking
+        }
+        return state
+    }
 
     /// Speech bubble text — priority: active engine bubble > attention symbol
     var speechBubble: String? {
@@ -72,6 +81,7 @@ class PetModel: ObservableObject, Identifiable {
         let spawnX = CGFloat.random(in: xRange)
         let spawnY = CGFloat.random(in: yRange)
         self.position = CGPoint(x: spawnX, y: spawnY)
+        self.lastDropPosition = self.position
 
         // Start with appear animation
         self.opacity = 0

@@ -9,7 +9,6 @@ struct PetView: View {
     let onRightClick: (NSPoint) -> Void
     @State private var isHovering = false
     @State private var bubbleOffset: CGFloat = 0
-    @State private var dragStartPosition: CGPoint?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,7 +30,7 @@ struct PetView: View {
             // Sprite (real sprite sheet with SF Symbol fallback)
             SpriteSheetView(
                 kind: pet.kind,
-                state: pet.state,
+                state: pet.visualState,
                 frame: pet.currentFrame,
                 petSize: petSize
             )
@@ -48,34 +47,112 @@ struct PetView: View {
             Spacer(minLength: 0)
         }
         .frame(width: petSize * 2, height: petSize * 2.5)
-        .contentShape(Rectangle())
+        .overlay(
+            PetInteractionOverlay(
+                pet: pet,
+                onDoubleClick: onDoubleClick,
+                onRightClick: onRightClick
+            )
+        )
         .onHover { isHovering = $0 }
-        .gesture(dragGesture)
-        .onTapGesture(count: 2) { onDoubleClick() }
-        .onRightClick { point in onRightClick(point) }
+    }
+}
+
+// MARK: - AppKit Mouse Event Handler
+
+/// Handles drag, double-click, and right-click at the AppKit level.
+/// SwiftUI gestures don't reliably receive events through non-activating panels.
+struct PetInteractionOverlay: NSViewRepresentable {
+    let pet: PetModel
+    let onDoubleClick: () -> Void
+    let onRightClick: (NSPoint) -> Void
+
+    func makeNSView(context: Context) -> PetMouseView {
+        PetMouseView(
+            pet: pet,
+            onDoubleClick: onDoubleClick,
+            onRightClick: onRightClick
+        )
     }
 
-    private var dragGesture: some Gesture {
-        DragGesture(coordinateSpace: .global)
-            .onChanged { value in
-                if dragStartPosition == nil {
-                    dragStartPosition = pet.position
-                    pet.isDragging = true
-                }
-                guard let start = dragStartPosition else { return }
-                // value.translation is the delta from drag start in
-                // the window's coordinate space. Y is flipped (SwiftUI
-                // Y-down vs screen Y-up), so negate the Y component.
-                pet.position = CGPoint(
-                    x: start.x + value.translation.width,
-                    y: start.y - value.translation.height
-                )
+    func updateNSView(_ nsView: PetMouseView, context: Context) {
+        nsView.pet = pet
+        nsView.onDoubleClick = onDoubleClick
+        nsView.onRightClick = onRightClick
+    }
+}
+
+/// NSView subclass that receives all mouse events directly from the window.
+/// Works reliably in non-activating NSPanel (unlike SwiftUI gestures).
+class PetMouseView: NSView {
+    var pet: PetModel
+    var onDoubleClick: () -> Void
+    var onRightClick: (NSPoint) -> Void
+    private var dragStartModelPosition: CGPoint?
+    private var dragStartScreenPoint: NSPoint?
+
+    init(
+        pet: PetModel,
+        onDoubleClick: @escaping () -> Void,
+        onRightClick: @escaping (NSPoint) -> Void
+    ) {
+        self.pet = pet
+        self.onDoubleClick = onDoubleClick
+        self.onRightClick = onRightClick
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            DispatchQueue.main.async { [weak self] in
+                self?.onDoubleClick()
             }
-            .onEnded { _ in
-                dragStartPosition = nil
-                pet.isDragging = false
-                // Pet stays where dropped — no freeze timer
-            }
+            return
+        }
+        // Start drag
+        dragStartModelPosition = pet.position
+        dragStartScreenPoint = NSEvent.mouseLocation
+        DispatchQueue.main.async { [weak self] in
+            self?.pet.isDragging = true
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let startModel = dragStartModelPosition,
+              let startScreen = dragStartScreenPoint else { return }
+        let current = NSEvent.mouseLocation
+        // Screen coordinates: Y-up, same as model coordinates
+        let dx = current.x - startScreen.x
+        let dy = current.y - startScreen.y
+        DispatchQueue.main.async { [weak self] in
+            self?.pet.position = CGPoint(
+                x: startModel.x + dx,
+                y: startModel.y + dy
+            )
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard dragStartModelPosition != nil else { return }
+        dragStartModelPosition = nil
+        dragStartScreenPoint = nil
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.pet.isDragging = false
+            self.pet.lastDropPosition = self.pet.position
+        }
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        let screenPoint = NSEvent.mouseLocation
+        DispatchQueue.main.async { [weak self] in
+            self?.onRightClick(screenPoint)
+        }
     }
 }
 
@@ -89,51 +166,12 @@ struct PlaceholderSprite: View {
 
     var body: some View {
         ZStack {
-            // Background shape
             RoundedRectangle(cornerRadius: petSize * 0.15)
-                .fill(backgroundColor)
+                .fill(Color(hue: kind.placeholderHue, saturation: 0.3, brightness: 0.35))
                 .frame(width: petSize, height: petSize)
-
-            // SF Symbol
-            symbolView
-        }
-    }
-
-    @ViewBuilder
-    private var symbolView: some View {
-        let base = Image(systemName: kind.placeholderSymbol(for: state))
-            .font(.system(size: petSize * 0.45))
-            .foregroundStyle(symbolColor)
-        if #available(macOS 14.0, *) {
-            base.symbolEffect(.pulse, options: .repeating,
-                              isActive: state.isAttentionSeeking)
-        } else {
-            base.opacity(state.isAttentionSeeking ? 0.6 : 1.0)
-        }
-    }
-
-    private var backgroundColor: Color {
-        let hue = kind.placeholderHue
-        switch state {
-        case .sleeping:
-            return Color(hue: hue, saturation: 0.2, brightness: 0.3)
-        case .alerting, .barking:
-            return Color(hue: 0.08, saturation: 0.6, brightness: 0.5)
-        case .spinning:
-            return Color(hue: 0.15, saturation: 0.4, brightness: 0.4)
-        default:
-            return Color(hue: hue, saturation: 0.3, brightness: 0.35)
-        }
-    }
-
-    private var symbolColor: Color {
-        switch state {
-        case .sleeping:
-            return .white.opacity(0.5)
-        case .alerting, .barking:
-            return .white
-        default:
-            return .white.opacity(0.85)
+            Image(systemName: kind.placeholderSymbol(for: state))
+                .font(.system(size: petSize * 0.45))
+                .foregroundStyle(.white.opacity(0.85))
         }
     }
 }
@@ -172,54 +210,6 @@ struct PetNameTag: View {
                 Capsule()
                     .fill(.black.opacity(0.6))
             )
-    }
-}
-
-// MARK: - Right-Click Modifier
-
-/// Detects right-click (context menu trigger) on a view.
-struct RightClickModifier: ViewModifier {
-    let action: (NSPoint) -> Void
-
-    func body(content: Content) -> some View {
-        content.overlay(
-            RightClickOverlay(action: action)
-        )
-    }
-}
-
-struct RightClickOverlay: NSViewRepresentable {
-    let action: (NSPoint) -> Void
-
-    func makeNSView(context: Context) -> RightClickDetector {
-        RightClickDetector(action: action)
-    }
-
-    func updateNSView(_ nsView: RightClickDetector, context: Context) {
-        nsView.action = action
-    }
-}
-
-class RightClickDetector: NSView {
-    var action: (NSPoint) -> Void
-
-    init(action: @escaping (NSPoint) -> Void) {
-        self.action = action
-        super.init(frame: .zero)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    override func rightMouseDown(with event: NSEvent) {
-        let screenPoint = NSEvent.mouseLocation
-        action(screenPoint)
-    }
-}
-
-extension View {
-    func onRightClick(perform action: @escaping (NSPoint) -> Void) -> some View {
-        modifier(RightClickModifier(action: action))
     }
 }
 
