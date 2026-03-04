@@ -280,35 +280,52 @@ enum PetAnimationEngine {
     private static func bubbleText(for pet: PetModel) -> String? {
         switch pet.state {
         case .sitting:
-            // Working state — pet is chilling while agent codes
-            return [
-                "coding...",
-                "thinking...",
-                "building...",
-                "fixing bugs",
-                "almost done",
-            ].randomElement()
+            // Show what the agent is actually doing when possible
+            if let text = toolBubble(for: pet.session) {
+                return text
+            }
+            return ["coding...", "thinking..."].randomElement()
         case .sleeping:
-            return [
-                "zzz",
-                "...",
-            ].randomElement()
+            return ["zzz", "..."].randomElement()
         case .alerting:
-            return [
-                "hey!",
-                "need input",
-                "waiting...",
-            ].randomElement()
+            return pet.session.notificationMessage
+                .map { String($0.prefix(20)) } ?? "need input"
         case .barking:
-            return [
-                "approve?",
-                "permission?",
-            ].randomElement()
+            return "approve?"
         case .spinning:
-            return ["compacting..."].randomElement()
+            return "compacting..."
         default:
             return nil
         }
+    }
+
+    /// Short bubble text from the session's current tool activity.
+    private static func toolBubble(for session: Session) -> String? {
+        guard let tool = session.lastTool else { return nil }
+        let detail = session.lastToolDetail
+        switch tool.lowercased() {
+        case "bash":
+            return detail.map { "$ \(String($0.prefix(18)))" } ?? "running..."
+        case "edit":
+            return detail.map { "editing \(fileName($0))" } ?? "editing..."
+        case "write":
+            return detail.map { "writing \(fileName($0))" } ?? "writing..."
+        case "read":
+            return detail.map { "reading \(fileName($0))" } ?? "reading..."
+        case "grep", "glob":
+            return "searching..."
+        case "task":
+            return "delegating..."
+        case "webfetch", "websearch":
+            return "browsing..."
+        default:
+            return "\(tool.lowercased())..."
+        }
+    }
+
+    private static func fileName(_ path: String) -> String {
+        let name = URL(fileURLWithPath: path).lastPathComponent
+        return String(name.prefix(14))
     }
 
     // MARK: - State Transitions
@@ -316,6 +333,12 @@ enum PetAnimationEngine {
     static func updateStateTransition(
         _ pet: PetModel, newStatus: SessionStatus
     ) {
+        // If user dismissed this status by dragging, ignore until it changes
+        if let dismissed = pet.dismissedStatus {
+            if newStatus == dismissed { return }
+            pet.dismissedStatus = nil
+        }
+
         let newState = PetState(from: newStatus)
         guard newState != pet.state else { return }
 

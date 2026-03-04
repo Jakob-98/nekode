@@ -8,26 +8,10 @@ struct PetView: View {
     let onDoubleClick: () -> Void
     let onRightClick: (NSPoint) -> Void
     @State private var isHovering = false
-    @State private var bubbleOffset: CGFloat = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-
-            // Speech bubble
-            if let bubble = pet.speechBubble {
-                PetSpeechBubble(text: bubble)
-                    .offset(y: bubbleOffset)
-                    .onAppear { bubbleOffset = -4 }
-                    .animation(
-                        .easeInOut(duration: 0.8)
-                            .repeatForever(autoreverses: true),
-                        value: bubbleOffset
-                    )
-                    .transition(.opacity.combined(with: .scale))
-            }
-
-            // Sprite (real sprite sheet with SF Symbol fallback)
+        ZStack {
+            // Sprite anchored at center — never moves
             SpriteSheetView(
                 kind: pet.kind,
                 state: pet.visualState,
@@ -38,13 +22,15 @@ struct PetView: View {
             .scaleEffect(pet.scale)
             .opacity(pet.opacity)
 
-            // Name tag
-            if isHovering || pet.needsAttention {
-                PetNameTag(text: pet.displayName)
-                    .transition(.opacity)
-            }
+            // Speech bubble floats above sprite (always in layout, opacity-toggled)
+            PetSpeechBubble(text: pet.speechBubble ?? "")
+                .offset(y: -petSize * 0.7)
+                .opacity(pet.speechBubble != nil ? 1 : 0)
 
-            Spacer(minLength: 0)
+            // Name tag sits below sprite (always in layout, opacity-toggled)
+            PetNameTag(text: pet.displayName + "...")
+                .offset(y: petSize * 0.75)
+                .opacity(isHovering || pet.needsAttention ? 1 : 0)
         }
         .frame(width: petSize * 2, height: petSize * 2.5)
         .overlay(
@@ -145,6 +131,14 @@ class PetMouseView: NSView {
             guard let self else { return }
             self.pet.isDragging = false
             self.pet.lastDropPosition = self.pet.position
+            // Dragging an attention-seeking pet dismisses the alert
+            if self.pet.state.isAttentionSeeking {
+                self.pet.dismissedStatus = self.pet.session.status
+                self.pet.state = .sleeping
+                self.pet.velocity = .zero
+                self.pet.currentFrame = 0
+                self.pet.frameAccumulator = 0
+            }
         }
     }
 
@@ -201,11 +195,11 @@ struct PetNameTag: View {
     let text: String
 
     var body: some View {
-        Text(text)
-            .font(.system(size: 9, weight: .medium, design: .monospaced))
+        Text(String(text.prefix(30)))
+            .font(.system(size: 7, weight: .medium, design: .monospaced))
             .foregroundStyle(.white)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
             .background(
                 Capsule()
                     .fill(.black.opacity(0.6))

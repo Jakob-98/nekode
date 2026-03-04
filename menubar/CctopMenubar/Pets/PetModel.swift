@@ -26,6 +26,10 @@ class PetModel: ObservableObject, Identifiable {
     var target: CGPoint?                 // Where to move toward (nil = roaming)
     var roamPauseUntil: Date?            // Random pause during roaming
     var lastDropPosition: CGPoint?       // Where user last dropped the pet (its "home")
+    /// When user drags an attention-seeking pet, the status is stored here.
+    /// Prevents the engine from immediately re-setting the pet to alerting/barking
+    /// until the session status actually changes to something different.
+    var dismissedStatus: SessionStatus?
 
     // MARK: - Speech Bubbles
 
@@ -75,11 +79,10 @@ class PetModel: ObservableObject, Identifiable {
         self.session = session
         self.state = PetState(from: session.status)
 
-        // Spawn at random position anywhere within screen bounds
+        // Spawn near top of screen (menubar area), spread horizontally
         let xRange = screenBounds.minX + 40...screenBounds.maxX - 40
-        let yRange = screenBounds.minY + 40...screenBounds.maxY - 40
         let spawnX = CGFloat.random(in: xRange)
-        let spawnY = CGFloat.random(in: yRange)
+        let spawnY = screenBounds.maxY - 40
         self.position = CGPoint(x: spawnX, y: spawnY)
         self.lastDropPosition = self.position
 
