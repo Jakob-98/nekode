@@ -33,6 +33,8 @@ struct SettingsSection: View {
     @ObservedObject var pluginManager: PluginManager
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
+    @AppStorage("desktopPetsEnabled") private var desktopPetsEnabled = false
+    @AppStorage("desktopPetSize") private var desktopPetSize = 64
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var justInstalled = false
     @State private var installFailed = false
@@ -133,6 +135,39 @@ struct SettingsSection: View {
                     SessionManager.requestNotificationPermission()
                 }
             }
+
+            Divider().padding(.horizontal, 14)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle(isOn: $desktopPetsEnabled) {
+                    Text("Desktop Pets")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.textSecondary)
+                }
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+
+                if desktopPetsEnabled {
+                    HStack {
+                        Text("Pet Size")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.textSecondary)
+                        Spacer()
+                        AmberSegmentedPicker(
+                            options: [
+                                (48, "Small"),
+                                (64, "Medium"),
+                                (96, "Large"),
+                            ],
+                            selection: $desktopPetSize
+                        )
+                        .frame(width: 180)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+            .padding(.bottom, 12)
         }
         .background(Color.settingsBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))

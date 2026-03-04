@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var previousApp: NSRunningApplication?
     private var lastExternalApp: NSRunningApplication?
     private var panelMode: PanelMode = .hidden
+    private var petManager: PetManager?
     private var cancellables: Set<AnyCancellable> = []
     @AppStorage("appearanceMode") var appearanceMode: String = "system"
 
@@ -56,6 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         applyAppearance()
         registerShortcuts()
         observeSessionUpdates()
+        setupPetManager()
     }
 
     @MainActor private func registerShortcuts() {
@@ -134,6 +136,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @MainActor @objc private func togglePanel() {
         handleEvent(.menubarIconClicked(appIsActive: NSApp.isActive))
+    }
+
+    @MainActor private func setupPetManager() {
+        petManager = PetManager(sessionManager: sessionManager)
     }
 
     private func applyAppearance() {

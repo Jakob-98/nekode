@@ -69,6 +69,15 @@
 		CMT000010000000000000001 /* CompactModeControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CMT000020000000000000001 /* CompactModeControllerTests.swift */; };
 		PCT000010000000000000001 /* PanelCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PCT000020000000000000001 /* PanelCoordinatorTests.swift */; };
 		CST000010000000000000001 /* CompactModeScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CST000020000000000000001 /* CompactModeScenarioTests.swift */; };
+		PET100010000000000000001 /* PetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PET100020000000000000001 /* PetTests.swift */; };
+		PK0000010000000000000001 /* PetKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = PK0000020000000000000001 /* PetKind.swift */; };
+		PS0000010000000000000001 /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = PS0000020000000000000001 /* PetState.swift */; };
+		PD0000010000000000000001 /* PetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PD0000020000000000000001 /* PetModel.swift */; };
+		PW0000010000000000000001 /* PetWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW0000020000000000000001 /* PetWindow.swift */; };
+		PE0000010000000000000001 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PE0000020000000000000001 /* PetView.swift */; };
+		PA0000010000000000000001 /* PetAnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = PA0000020000000000000001 /* PetAnimationEngine.swift */; };
+		PG0000010000000000000001 /* PetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PG0000020000000000000001 /* PetManager.swift */; };
+		SS0000010000000000000001 /* SpriteSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SS0000020000000000000001 /* SpriteSheetView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -141,6 +150,15 @@
 		CMT000020000000000000001 /* CompactModeControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactModeControllerTests.swift; sourceTree = "<group>"; };
 		PCT000020000000000000001 /* PanelCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCoordinatorTests.swift; sourceTree = "<group>"; };
 		CST000020000000000000001 /* CompactModeScenarioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactModeScenarioTests.swift; sourceTree = "<group>"; };
+		PET100020000000000000001 /* PetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTests.swift; sourceTree = "<group>"; };
+		PK0000020000000000000001 /* PetKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetKind.swift; sourceTree = "<group>"; };
+		PS0000020000000000000001 /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
+		PD0000020000000000000001 /* PetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetModel.swift; sourceTree = "<group>"; };
+		PW0000020000000000000001 /* PetWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWindow.swift; sourceTree = "<group>"; };
+		PE0000020000000000000001 /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
+		PA0000020000000000000001 /* PetAnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAnimationEngine.swift; sourceTree = "<group>"; };
+		PG0000020000000000000001 /* PetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetManager.swift; sourceTree = "<group>"; };
+		SS0000020000000000000001 /* SpriteSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,6 +232,7 @@
 				A10000090000000000000001 /* Views */,
 				A1000000A000000000000001 /* Services */,
 				P1000000F000000000000001 /* Hook */,
+				PET000000000000000000001 /* Pets */,
 			);
 			path = CctopMenubar;
 			sourceTree = "<group>";
@@ -295,8 +314,24 @@
 				CMT000020000000000000001 /* CompactModeControllerTests.swift */,
 				PCT000020000000000000001 /* PanelCoordinatorTests.swift */,
 				CST000020000000000000001 /* CompactModeScenarioTests.swift */,
+				PET100020000000000000001 /* PetTests.swift */,
 			);
 			path = CctopMenubarTests;
+			sourceTree = "<group>";
+		};
+		PET000000000000000000001 /* Pets */ = {
+			isa = PBXGroup;
+			children = (
+				PK0000020000000000000001 /* PetKind.swift */,
+				PS0000020000000000000001 /* PetState.swift */,
+				PD0000020000000000000001 /* PetModel.swift */,
+				PW0000020000000000000001 /* PetWindow.swift */,
+				PE0000020000000000000001 /* PetView.swift */,
+				PA0000020000000000000001 /* PetAnimationEngine.swift */,
+				PG0000020000000000000001 /* PetManager.swift */,
+				SS0000020000000000000001 /* SpriteSheetView.swift */,
+			);
+			path = Pets;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -440,6 +475,14 @@
 				AB0000010000000000000001 /* AboutView.swift in Sources */,
 				EK0000010000000000000001 /* HostApp.swift in Sources */,
 				RPM000010000000000000001 /* RecentProject+Mock.swift in Sources */,
+				PK0000010000000000000001 /* PetKind.swift in Sources */,
+				PS0000010000000000000001 /* PetState.swift in Sources */,
+				PD0000010000000000000001 /* PetModel.swift in Sources */,
+				PW0000010000000000000001 /* PetWindow.swift in Sources */,
+				PE0000010000000000000001 /* PetView.swift in Sources */,
+				PA0000010000000000000001 /* PetAnimationEngine.swift in Sources */,
+				PG0000010000000000000001 /* PetManager.swift in Sources */,
+				SS0000010000000000000001 /* SpriteSheetView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,6 +522,7 @@
 				CMT000010000000000000001 /* CompactModeControllerTests.swift in Sources */,
 				PCT000010000000000000001 /* PanelCoordinatorTests.swift in Sources */,
 				CST000010000000000000001 /* CompactModeScenarioTests.swift in Sources */,
+				PET100010000000000000001 /* PetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
