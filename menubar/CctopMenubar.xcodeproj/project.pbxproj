@@ -78,6 +78,11 @@
 		PA0000010000000000000001 /* PetAnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = PA0000020000000000000001 /* PetAnimationEngine.swift */; };
 		PG0000010000000000000001 /* PetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PG0000020000000000000001 /* PetManager.swift */; };
 		SS0000010000000000000001 /* SpriteSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SS0000020000000000000001 /* SpriteSheetView.swift */; };
+		PWT000010000000000000001 /* PetWaitMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = PWT000020000000000000001 /* PetWaitMain.swift */; };
+		PWT000030000000000000001 /* PipeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = PWT000040000000000000001 /* PipeMonitor.swift */; };
+		PWT000050000000000000001 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000020000000000000001 /* Session.swift */; };
+		PWT000060000000000000001 /* SessionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000040000000000000001 /* SessionStatus.swift */; };
+		PWT000070000000000000001 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = N10000060000000000000001 /* Config.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -159,6 +164,9 @@
 		PA0000020000000000000001 /* PetAnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAnimationEngine.swift; sourceTree = "<group>"; };
 		PG0000020000000000000001 /* PetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetManager.swift; sourceTree = "<group>"; };
 		SS0000020000000000000001 /* SpriteSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetView.swift; sourceTree = "<group>"; };
+		PWT000020000000000000001 /* PetWaitMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWaitMain.swift; sourceTree = "<group>"; };
+		PWT000040000000000000001 /* PipeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipeMonitor.swift; sourceTree = "<group>"; };
+		PWT00000D000000000000001 /* petwait */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = petwait; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -179,6 +187,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		T10000070000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		PWT00000E000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -233,6 +248,7 @@
 				A1000000A000000000000001 /* Services */,
 				P1000000F000000000000001 /* Hook */,
 				PET000000000000000000001 /* Pets */,
+			PWT000000000000000000001 /* PetWait */,
 			);
 			path = CctopMenubar;
 			sourceTree = "<group>";
@@ -243,6 +259,7 @@
 				A10000030000000000000001 /* CctopMenubar.app */,
 				T10000060000000000000001 /* CctopMenubarTests.xctest */,
 				P1000000D000000000000001 /* cctop-hook */,
+				PWT00000D000000000000001 /* petwait */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -334,6 +351,15 @@
 			path = Pets;
 			sourceTree = "<group>";
 		};
+		PWT000000000000000000001 /* PetWait */ = {
+			isa = PBXGroup;
+			children = (
+				PWT000020000000000000001 /* PetWaitMain.swift */,
+				PWT000040000000000000001 /* PipeMonitor.swift */,
+			);
+			path = PetWait;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -391,6 +417,22 @@
 			productReference = T10000060000000000000001 /* CctopMenubarTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		PWT000100000000000000001 /* petwait */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = PWT000110000000000000001 /* Build configuration list for PBXNativeTarget "petwait" */;
+			buildPhases = (
+				PWT000120000000000000001 /* Sources */,
+				PWT00000E000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = petwait;
+			productName = petwait;
+			productReference = PWT00000D000000000000001 /* petwait */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -421,6 +463,7 @@
 				A1000000B000000000000001 /* CctopMenubar */,
 				T10000090000000000000001 /* CctopMenubarTests */,
 				P10000100000000000000001 /* cctop-hook */,
+				PWT000100000000000000001 /* petwait */,
 			);
 		};
 /* End PBXProject section */
@@ -523,6 +566,18 @@
 				PCT000010000000000000001 /* PanelCoordinatorTests.swift in Sources */,
 				CST000010000000000000001 /* CompactModeScenarioTests.swift in Sources */,
 				PET100010000000000000001 /* PetTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		PWT000120000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				PWT000010000000000000001 /* PetWaitMain.swift in Sources */,
+				PWT000030000000000000001 /* PipeMonitor.swift in Sources */,
+				PWT000050000000000000001 /* Session.swift in Sources */,
+				PWT000060000000000000001 /* SessionStatus.swift in Sources */,
+				PWT000070000000000000001 /* Config.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -706,6 +761,30 @@
 			};
 			name = Release;
 		};
+		PWT000130000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 702;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.7.2;
+				PRODUCT_NAME = petwait;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		PWT000140000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 702;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.7.2;
+				PRODUCT_NAME = petwait;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -741,6 +820,15 @@
 			buildConfigurations = (
 				T1000000D000000000000001 /* Debug */,
 				T1000000E000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		PWT000110000000000000001 /* Build configuration list for PBXNativeTarget "petwait" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				PWT000130000000000000001 /* Debug */,
+				PWT000140000000000000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

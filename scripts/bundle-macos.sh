@@ -47,6 +47,16 @@ if [ "$SKIP_BUILD" = false ]; then
         CODE_SIGN_IDENTITY="-" \
         ARCHS="$XCODE_ARCHS" \
         ONLY_ACTIVE_ARCH=NO
+
+    echo "==> Building petwait CLI..."
+    xcodebuild build \
+        -project "$REPO_ROOT/menubar/CctopMenubar.xcodeproj" \
+        -scheme petwait \
+        -configuration Release \
+        -derivedDataPath "$REPO_ROOT/menubar/build/" \
+        CODE_SIGN_IDENTITY="-" \
+        ARCHS="$XCODE_ARCHS" \
+        ONLY_ACTIVE_ARCH=NO
 fi
 
 echo "==> Assembling .app bundle..."
@@ -58,6 +68,9 @@ cp -R "$REPO_ROOT/menubar/build/Build/Products/Release/CctopMenubar.app" "$APP"
 
 # Copy cctop-hook into the app bundle
 cp "$REPO_ROOT/menubar/build/Build/Products/Release/cctop-hook" "$APP/Contents/MacOS/cctop-hook"
+
+# Copy petwait into the app bundle
+cp "$REPO_ROOT/menubar/build/Build/Products/Release/petwait" "$APP/Contents/MacOS/petwait"
 
 # Copy opencode plugin into Resources
 mkdir -p "$APP/Contents/Resources"
@@ -75,6 +88,10 @@ done < <(find "$APP/Contents" -depth \( -name "*.bundle" -o -name "*.framework" 
 # Sign cctop-hook
 echo "  Signing cctop-hook..."
 codesign --force --sign - "$APP/Contents/MacOS/cctop-hook"
+
+# Sign petwait
+echo "  Signing petwait..."
+codesign --force --sign - "$APP/Contents/MacOS/petwait"
 
 # Sign main executable
 echo "  Signing CctopMenubar..."

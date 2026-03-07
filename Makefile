@@ -9,6 +9,7 @@ all: lint build test
 build:
 	xcodebuild build -project $(PROJECT) -scheme CctopMenubar -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
 	xcodebuild build -project $(PROJECT) -scheme cctop-hook -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
+	xcodebuild build -project $(PROJECT) -scheme petwait -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
 	mkdir -p $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources
 	cp plugins/opencode/plugin.js $(DERIVED)/Build/Products/Debug/CctopMenubar.app/Contents/Resources/opencode-plugin.js
 
@@ -24,8 +25,10 @@ clean:
 
 install:
 	xcodebuild build -project $(PROJECT) -scheme cctop-hook -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
+	xcodebuild build -project $(PROJECT) -scheme petwait -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
 	mkdir -p ~/.cctop/bin
 	cp $(DERIVED)/Build/Products/Release/cctop-hook ~/.cctop/bin/cctop-hook
+	cp $(DERIVED)/Build/Products/Release/petwait ~/.cctop/bin/petwait
 
 run: build
 	open $(DERIVED)/Build/Products/Debug/CctopMenubar.app

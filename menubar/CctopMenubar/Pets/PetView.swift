@@ -9,9 +9,52 @@ struct PetView: View {
     let onRightClick: (NSPoint) -> Void
     @State private var isHovering = false
 
+    /// Sinusoidal breathing bob: 1-2px vertical oscillation, 2.5s cycle.
+    /// Active during non-moving states to make the pet feel alive.
+    private var breathingOffset: CGFloat {
+        let cycle = sin(pet.breathAccumulator * 2.0 * .pi / 2.5)
+        // Scale displacement by pet size: ~1-2px at 64pt
+        return CGFloat(cycle) * (petSize / 64.0) * 1.5
+    }
+
     var body: some View {
         ZStack {
-            // Sprite anchored at center — never moves
+            // Shadow ellipse below the sprite for visual grounding
+            Ellipse()
+                .fill(Color.black.opacity(0.25))
+                .frame(width: petSize * 0.6, height: petSize * 0.15)
+                .offset(y: petSize * 0.42)
+                .blur(radius: 1.5)
+
+            // Dust particles at pet's feet
+            ForEach(pet.dustParticles) { particle in
+                Circle()
+                    .fill(Color.gray.opacity(particle.opacity * 0.6))
+                    .frame(
+                        width: particle.size,
+                        height: particle.size
+                    )
+                    .offset(x: particle.x, y: petSize * 0.35 + particle.y)
+            }
+            .allowsHitTesting(false)
+
+            // Zzz particles floating above sleeping pets
+            ForEach(pet.zzzParticles) { particle in
+                Text(particle.letter)
+                    .font(.system(
+                        size: particle.size,
+                        weight: .bold,
+                        design: .rounded
+                    ))
+                    .foregroundStyle(.white.opacity(particle.opacity * 0.7))
+                    .offset(
+                        x: particle.x,
+                        y: petSize * 0.0 + particle.y
+                    )
+            }
+            .allowsHitTesting(false)
+
+            // Sprite anchored at center — breathing bob applied as offset
             SpriteSheetView(
                 kind: pet.kind,
                 state: pet.visualState,
@@ -19,16 +62,20 @@ struct PetView: View {
                 petSize: petSize
             )
             .scaleEffect(x: pet.facingRight ? 1 : -1, y: 1)
+            .scaleEffect(x: pet.scaleX, y: pet.scaleY)
             .scaleEffect(pet.scale)
+            .offset(y: breathingOffset)
             .opacity(pet.opacity)
 
-            // Speech bubble floats above sprite (always in layout, opacity-toggled)
+            // Speech bubble floats above sprite with slide+fade animation
             PetSpeechBubble(text: pet.speechBubble ?? "")
-                .offset(y: -petSize * 0.7)
+                .offset(y: -petSize * 0.7 + (pet.speechBubble != nil ? 0 : 8))
                 .opacity(pet.speechBubble != nil ? 1 : 0)
+                .animation(.easeOut(duration: 0.2), value: pet.speechBubble != nil)
+                .allowsHitTesting(false)
 
             // Name tag sits below sprite (always in layout, opacity-toggled)
-            PetNameTag(text: pet.displayName + "...")
+            PetNameTag(text: pet.displayName)
                 .offset(y: petSize * 0.75)
                 .opacity(isHovering || pet.needsAttention ? 1 : 0)
         }
@@ -130,14 +177,30 @@ class PetMouseView: NSView {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.pet.isDragging = false
-            self.pet.lastDropPosition = self.pet.position
-            // Dragging an attention-seeking pet dismisses the alert
+                // Landing squash and dust on drop
+                PetAnimationEngine.triggerSquash(
+                    self.pet, scaleX: 1.15, scaleY: 0.85, duration: 0.1
+                )
+                PetAnimationEngine.spawnDust(self.pet)
+                // Dragging an attention-seeking pet dismisses the alert
+            // and restores the pre-chase home position
             if self.pet.state.isAttentionSeeking {
                 self.pet.dismissedStatus = self.pet.session.status
-                self.pet.state = .sleeping
+                if let savedHome = self.pet.preChaseHome {
+                    self.pet.lastDropPosition = savedHome
+                    self.pet.preChaseHome = nil
+                }
+                self.pet.attentionTime = 0
+                // Go to sitting (working) unless session is actually idle
+                let restState: PetState = self.pet.session.status == .idle ? .sleeping : .sitting
+                self.pet.state = restState
                 self.pet.velocity = .zero
                 self.pet.currentFrame = 0
                 self.pet.frameAccumulator = 0
+            } else {
+                // Normal drag — update home to where user dropped it
+                self.pet.lastDropPosition = self.pet.position
+                self.pet.hasCustomHome = true
             }
         }
     }

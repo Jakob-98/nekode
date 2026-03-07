@@ -75,9 +75,11 @@ enum PetState: Int, CaseIterable {
     }
 
     /// Whether the pet should be actively moving in this state.
+    /// Note: .walking and .running are visual-only states (used by visualState
+    /// for sprite selection) and are never set as actual pet states.
     var isMoving: Bool {
         switch self {
-        case .walking, .running, .alerting, .barking: return true
+        case .alerting, .barking: return true
         default: return false
         }
     }

@@ -221,8 +221,144 @@ final class PetAnimationEngineTests: XCTestCase {
     }
 
     func testResolveCollisionsNoCrash() {
-        PetAnimationEngine.resolveCollisions([], minGap: 20)
-        PetAnimationEngine.resolveCollisions([makePet()], minGap: 20)
+        PetAnimationEngine.resolveCollisions([], minGap: 60)
+        PetAnimationEngine.resolveCollisions([makePet()], minGap: 60)
+    }
+
+    func testResolveCollisions2DPushesApart() {
+        let pet1 = makePet()
+        let pet2 = makePet()
+        finishAppearing(pet1)
+        finishAppearing(pet2)
+        // Place pets 30px apart (less than 60px personal space)
+        pet1.position = CGPoint(x: 500, y: 500)
+        pet2.position = CGPoint(x: 520, y: 510)
+        PetAnimationEngine.resolveCollisions([pet1, pet2], minGap: 60)
+        let dx = pet2.position.x - pet1.position.x
+        let dy = pet2.position.y - pet1.position.y
+        let dist = sqrt(dx * dx + dy * dy)
+        // After resolution, they should be at least minGap apart
+        XCTAssertGreaterThanOrEqual(dist, 59.9)
+    }
+
+    func testResolveCollisionsSkipsDragging() {
+        let pet1 = makePet()
+        let pet2 = makePet()
+        finishAppearing(pet1)
+        finishAppearing(pet2)
+        pet1.position = CGPoint(x: 500, y: 500)
+        pet2.position = CGPoint(x: 510, y: 500)
+        pet2.isDragging = true
+        let originalPos2 = pet2.position
+        PetAnimationEngine.resolveCollisions([pet1, pet2], minGap: 60)
+        // Dragging pet should not be moved
+        XCTAssertEqual(pet2.position.x, originalPos2.x)
+        XCTAssertEqual(pet2.position.y, originalPos2.y)
+    }
+
+    func testResolveCollisionsNoEffectWhenFarApart() {
+        let pet1 = makePet()
+        let pet2 = makePet()
+        finishAppearing(pet1)
+        finishAppearing(pet2)
+        pet1.position = CGPoint(x: 100, y: 500)
+        pet2.position = CGPoint(x: 500, y: 500)
+        let orig1 = pet1.position
+        let orig2 = pet2.position
+        PetAnimationEngine.resolveCollisions([pet1, pet2], minGap: 60)
+        XCTAssertEqual(pet1.position.x, orig1.x)
+        XCTAssertEqual(pet2.position.x, orig2.x)
+    }
+
+    func testAttentionTargetSinglePetReturnsMouse() {
+        let pet = makePet()
+        let mouse = CGPoint(x: 700, y: 450)
+        let target = PetAnimationEngine.attentionTarget(
+            for: pet, allPets: [pet], mouseTarget: mouse
+        )
+        XCTAssertEqual(target.x, mouse.x)
+        XCTAssertEqual(target.y, mouse.y)
+    }
+
+    func testAttentionTargetMultiplePetsSpread() {
+        let pet1 = makePet()
+        let pet2 = makePet()
+        // Give distinct IDs
+        let session2 = Session.mock(status: .waitingInput, pid: 998)
+        let petB = PetModel(
+            session: session2, kind: .cat, screenBounds: screenBounds
+        )
+        pet1.state = .alerting
+        pet1.attentionTime = 15  // Stage 2
+        petB.state = .alerting
+        petB.attentionTime = 15
+        finishAppearing(pet1)
+        finishAppearing(petB)
+        let mouse = CGPoint(x: 700, y: 450)
+        let t1 = PetAnimationEngine.attentionTarget(
+            for: pet1, allPets: [pet1, petB], mouseTarget: mouse
+        )
+        let t2 = PetAnimationEngine.attentionTarget(
+            for: petB, allPets: [pet1, petB], mouseTarget: mouse
+        )
+        // Targets should be different
+        let dist = sqrt(
+            pow(t1.x - t2.x, 2) + pow(t1.y - t2.y, 2)
+        )
+        XCTAssertGreaterThan(dist, 10)
+    }
+
+    func testGatheringTargetNilForSinglePet() {
+        let pet = makePet()
+        let result = PetAnimationEngine.gatheringTarget(
+            for: pet, allPets: [pet]
+        )
+        XCTAssertNil(result)
+    }
+
+    func testGatheringTargetReturnsCentroidWhenFar() {
+        let pet1 = makePet()
+        // Distinct ID so gatheringTarget's id filter doesn't exclude pet2
+        let pet2 = PetModel(
+            session: .mock(id: "other-pet", status: .idle, pid: 998),
+            kind: .cat, screenBounds: screenBounds
+        )
+        finishAppearing(pet1)
+        finishAppearing(pet2)
+        // pet1 is roaming far away, pet2 is sitting still
+        pet1.state = .walking
+        pet1.position = CGPoint(x: 100, y: 100)
+        pet2.state = .sitting
+        pet2.velocity = .zero
+        pet2.position = CGPoint(x: 700, y: 500)
+        let result = PetAnimationEngine.gatheringTarget(
+            for: pet1, allPets: [pet1, pet2]
+        )
+        XCTAssertNotNil(result)
+        // Should be near pet2's position (the centroid of sitters)
+        XCTAssertEqual(result!.x, 700, accuracy: 1)
+        XCTAssertEqual(result!.y, 500, accuracy: 1)
+    }
+
+    func testGatheringTargetNilWhenClose() {
+        let pet1 = makePet()
+        // Distinct ID so the filter actually includes pet2
+        let pet2 = PetModel(
+            session: .mock(id: "other-pet", status: .idle, pid: 998),
+            kind: .cat, screenBounds: screenBounds
+        )
+        finishAppearing(pet1)
+        finishAppearing(pet2)
+        pet1.state = .walking
+        pet1.position = CGPoint(x: 500, y: 500)
+        pet2.state = .sitting
+        pet2.velocity = .zero
+        pet2.position = CGPoint(x: 550, y: 500)
+        // 50px apart — within gatheringRadius (120px)
+        let result = PetAnimationEngine.gatheringTarget(
+            for: pet1, allPets: [pet1, pet2]
+        )
+        XCTAssertNil(result)
     }
 
     func testStepAnimationAdvancesFrame() {
@@ -260,8 +396,20 @@ final class PetPhysicsTests: XCTestCase {
         XCTAssertGreaterThan(PetPhysics.roamSpeed, 0)
         XCTAssertGreaterThan(PetPhysics.attentionSpeed, 0)
         XCTAssertGreaterThan(PetPhysics.edgeMargin, 0)
+        XCTAssertGreaterThan(PetPhysics.personalSpace, 0)
+        XCTAssertGreaterThan(PetPhysics.gatheringRadius, 0)
         XCTAssertGreaterThan(PetPhysics.appearDuration, 0)
         XCTAssertGreaterThan(PetPhysics.disappearDuration, 0)
+    }
+
+    func testPersonalSpaceGreaterThanZero() {
+        XCTAssertGreaterThanOrEqual(PetPhysics.personalSpace, 40)
+    }
+
+    func testGatheringRadiusGreaterThanPersonalSpace() {
+        XCTAssertGreaterThan(
+            PetPhysics.gatheringRadius, PetPhysics.personalSpace
+        )
     }
 
     func testAttentionSpeedGreaterThanRoamSpeed() {

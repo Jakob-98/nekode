@@ -2,7 +2,11 @@ import SwiftUI
 
 extension Session {
     var sourceBadgeColor: Color {
-        source == "opencode" ? .blue : .amber
+        switch source {
+        case "opencode": return .blue
+        case "cli": return .teal
+        default: return .amber
+        }
     }
 }
 
@@ -166,6 +170,13 @@ struct SessionCardView: View {
 #Preview("Source Badge OC") {
     SessionCardView(
         session: .mock(status: .working, lastTool: "bash", lastToolDetail: "go test ./...", source: "opencode"),
+        showSourceBadge: true
+    )
+    .frame(width: 300).padding()
+}
+#Preview("Source Badge CLI") {
+    SessionCardView(
+        session: .mock(sessionName: "cargo build", status: .working, lastTool: "pipe", lastToolDetail: "reading stdin...", source: "cli"),
         showSourceBadge: true
     )
     .frame(width: 300).padding()

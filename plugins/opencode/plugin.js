@@ -22,6 +22,7 @@ const TOOL_NAME_MAP = {
   webfetch: "WebFetch",
   websearch: "WebSearch",
   task: "Task",
+  question: "Question",
 };
 
 // Tool detail field extraction (mirrors HookHandler.extractToolDetail).
@@ -50,6 +51,14 @@ function normalizeTool(name) {
 
 function extractToolDetail(normalizedName, args) {
   if (!normalizedName || !args) return null;
+  // Special case: Question tool has nested questions array
+  if (normalizedName === "Question") {
+    const questions = args.questions;
+    if (Array.isArray(questions) && questions.length > 0) {
+      return questions[0].header || questions[0].question || null;
+    }
+    return null;
+  }
   const field = TOOL_DETAIL_FIELD[normalizedName];
   if (!field) return null;
   const value = args[field];
@@ -221,16 +230,20 @@ export const cctop = async ({ directory }) => {
       const tool = normalizeTool(output?.tool || _input?.tool);
       const args = output?.args || _input?.args;
       const detail = extractToolDetail(tool, args);
+      // The "question" tool asks the user for input and blocks until they respond.
+      // Treat it as waiting_input so the session shows as needing attention.
+      const isQuestion = tool && tool.toLowerCase() === "question";
       updateSession({
-        status: "working",
+        status: isQuestion ? "waiting_input" : "working",
         last_tool: tool,
         last_tool_detail: detail,
+        notification_message: isQuestion ? (detail || "Question pending") : session.notification_message,
       });
     },
 
     "tool.execute.after": async () => {
-      // Keep current status (working) — matches CC behavior
-      updateSession({});
+      // Resume working status — important after question tool (waiting_input)
+      updateSession({ status: "working" });
     },
 
     "permission.ask": async (input, _output) => {

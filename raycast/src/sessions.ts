@@ -141,7 +141,14 @@ export function displayName(session: CctopSession): string {
  * Matches Session.swift sourceLabel.
  */
 export function sourceLabel(session: CctopSession): string {
-  return session.source === "opencode" ? "OC" : "CC";
+  switch (session.source) {
+    case "opencode":
+      return "OC";
+    case "cli":
+      return "CLI";
+    default:
+      return "CC";
+  }
 }
 
 /**

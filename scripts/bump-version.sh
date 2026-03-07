@@ -52,7 +52,12 @@ HOOK_MAIN="$REPO_ROOT/menubar/CctopMenubar/Hook/HookMain.swift"
 sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$HOOK_MAIN"
 echo "  Updated HookMain.swift version"
 
-# 7. plugins/opencode/package.json
+# 7b. PetWaitMain.swift version string
+PETWAIT_MAIN="$REPO_ROOT/menubar/CctopMenubar/PetWait/PetWaitMain.swift"
+sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$PETWAIT_MAIN"
+echo "  Updated PetWaitMain.swift version"
+
+# 8. plugins/opencode/package.json
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/opencode/package.json"
 echo "  Updated plugins/opencode/package.json"
 

@@ -1,0 +1,5 @@
+# Desktop Pets v3
+
+Desktop Pets are small pixel-art animals (dog, cat, hamster) that live on the macOS desktop, one per active coding session. Each pet mirrors its session's real-time status — sleeping when idle, walking when working, and chasing the cursor when attention is needed. You can drag them around, double-click to jump to the session's terminal, and dismiss alerts by interacting with the pet directly. They're driven entirely by the same `~/.cctop/sessions/*.json` files that power the menubar, so any session source (Claude Code, opencode, or `petwait` CLI) automatically gets a pet.
+
+v1 (`desktop-pets-plan.md`) established the core concept and status-to-behavior mapping. v2 (`desktop-pets-v2.md`) focused on making a single pet feel alive — idle breathing, physics-based movement, animation queuing, and transition animations. v3 is about scaling that polish: multi-pet layout so pets don't overlap, per-pet personality variations (timing, gait), and better attention-seeking behaviors that are noticeable without being annoying.
