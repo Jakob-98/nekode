@@ -1,0 +1,11 @@
+{
+  "name": "catassistant",
+  "description": "Monitor and navigate Claude Code sessions across workspaces",
+  "version": "0.8.2",
+  "author": {
+    "name": "Jakob Serlier",
+    "url": "https://github.com/jakobserlier"
+  },
+  "repository": "https://github.com/jakobserlier/catassistant",
+  "license": "MIT"
+}

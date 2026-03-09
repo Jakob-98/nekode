@@ -1,22 +1,22 @@
-# Release Checklist for cctop v0.3.0
+# Release Checklist for CatAssistant v0.3.0
 
 ## One-Time Setup (before first release)
 
 ### 1. Create the Homebrew tap repo
 
-Go to https://github.com/new and create `homebrew-cctop` (public repo).
+Go to https://github.com/new and create `homebrew-catassistant` (public repo).
 
 ```bash
 # Initialize with the Casks directory
-git clone git@github.com:st0012/homebrew-cctop.git /tmp/homebrew-cctop
-cd /tmp/homebrew-cctop
+git clone git@github.com:jakobserlier/homebrew-catassistant.git /tmp/homebrew-catassistant
+cd /tmp/homebrew-catassistant
 mkdir Casks
-echo "# homebrew-cctop" > README.md
-echo "Homebrew tap for [cctop](https://github.com/st0012/cctop)." >> README.md
+echo "# homebrew-catassistant" > README.md
+echo "Homebrew tap for [CatAssistant](https://github.com/jakobserlier/catassistant)." >> README.md
 echo "" >> README.md
 echo '```bash' >> README.md
-echo "brew tap st0012/cctop" >> README.md
-echo "brew install --cask cctop" >> README.md
+echo "brew tap jakobserlier/catassistant" >> README.md
+echo "brew install --cask catassistant" >> README.md
 echo '```' >> README.md
 git add . && git commit -m "Initial tap setup" && git push
 ```
@@ -25,14 +25,14 @@ git add . && git commit -m "Initial tap setup" && git push
 
 1. Go to https://github.com/settings/tokens?type=beta (fine-grained tokens)
 2. Create a new token:
-   - Name: `cctop-tap-updater`
-   - Repository access: Only select repositories > `st0012/homebrew-cctop`
+   - Name: `catassistant-tap-updater`
+   - Repository access: Only select repositories > `jakobserlier/homebrew-catassistant`
    - Permissions: Contents (Read and write)
 3. Copy the token
 
 ### 3. Add the token as a repo secret
 
-1. Go to https://github.com/st0012/cctop/settings/secrets/actions
+1. Go to https://github.com/jakobserlier/catassistant/settings/secrets/actions
 2. Click "New repository secret"
 3. Name: `TAP_GITHUB_TOKEN`
 4. Value: paste the token from step 2
@@ -62,7 +62,7 @@ The tag push triggers `.github/workflows/release.yml` which will:
 - Create a GitHub Release with both zips
 - Auto-update the Homebrew tap with correct SHA256 hashes
 
-Monitor at: https://github.com/st0012/cctop/actions
+Monitor at: https://github.com/jakobserlier/catassistant/actions
 
 ### 4. Verify the release
 
@@ -71,14 +71,14 @@ Monitor at: https://github.com/st0012/cctop/actions
 gh release view v0.3.0
 
 # Test Homebrew install (after CI completes)
-brew tap st0012/cctop
-brew install --cask cctop
+brew tap jakobserlier/catassistant
+brew install --cask catassistant
 
 # Verify the app launches
-open /Applications/cctop.app
+open /Applications/CatAssistant.app
 
 # Verify the hook binary is in the app bundle
-ls -la /Applications/cctop.app/Contents/MacOS/cctop-hook
+ls -la /Applications/CatAssistant.app/Contents/MacOS/cathook
 
 # Verify opencode plugin version matches the release
 grep '"version"' plugins/opencode/package.json
@@ -88,18 +88,18 @@ grep '"version"' plugins/opencode/package.json
 
 ```bash
 # Verify the bundled plugin is in the app's Resources
-ls -la /Applications/cctop.app/Contents/Resources/opencode-plugin.js
+ls -la /Applications/CatAssistant.app/Contents/Resources/opencode-plugin.js
 
 # If opencode is configured (~/.config/opencode/ exists), launch the app
 # and verify it auto-installs the plugin
-open /Applications/cctop.app
-ls -la ~/.config/opencode/plugins/cctop.js
+open /Applications/CatAssistant.app
+ls -la ~/.config/opencode/plugins/catassistant.js
 
 # Start an opencode session and verify a session file appears
-ls ~/.cctop/sessions/
+ls ~/.cat/sessions/
 
 # Verify the session includes source: "opencode"
-cat ~/.cctop/sessions/*.json | jq '.source'
+cat ~/.cat/sessions/*.json | jq '.source'
 ```
 
 ### 6. If anything goes wrong

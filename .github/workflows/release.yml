@@ -49,11 +49,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain-db
 
-          ./scripts/sign-and-notarize.sh dist/cctop.app
+          ./scripts/sign-and-notarize.sh dist/CatAssistant.app
 
           # Re-create the zip with signed app
-          rm -f dist/cctop-macOS.zip
-          cd dist && ditto -c -k --sequesterRsrc --keepParent cctop.app cctop-macOS.zip
+          rm -f dist/catassistant-macOS.zip
+          cd dist && ditto -c -k --sequesterRsrc --keepParent CatAssistant.app catassistant-macOS.zip
 
           echo "signed=true" >> "$GITHUB_OUTPUT"
 
@@ -65,7 +65,7 @@ jobs:
           rm -f $RUNNER_TEMP/certificate.p12
 
       - name: Rename zip for release
-        run: mv dist/cctop-macOS.zip dist/cctop-macOS-${{ matrix.arch }}.zip
+        run: mv dist/catassistant-macOS.zip dist/catassistant-macOS-${{ matrix.arch }}.zip
 
       - name: Install create-dmg
         run: brew install create-dmg
@@ -76,14 +76,14 @@ jobs:
       - name: Upload zip artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: cctop-macOS-${{ matrix.arch }}
-          path: dist/cctop-macOS-${{ matrix.arch }}.zip
+          name: catassistant-macOS-${{ matrix.arch }}
+          path: dist/catassistant-macOS-${{ matrix.arch }}.zip
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: cctop-macOS-${{ matrix.arch }}-dmg
-          path: dist/cctop-macOS-${{ matrix.arch }}.dmg
+          name: catassistant-macOS-${{ matrix.arch }}-dmg
+          path: dist/catassistant-macOS-${{ matrix.arch }}.dmg
 
   release:
     name: Create Release
@@ -106,32 +106,32 @@ jobs:
 
           ### Homebrew
           \`\`\`bash
-          brew tap st0012/cctop
-          brew install --cask cctop
+          brew tap jakobserlier/catassistant
+          brew install --cask catassistant
           \`\`\`
 
           ### macOS (Apple Silicon)
           \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/cctop-macOS-arm64.zip -o cctop.zip
-          unzip cctop.zip
-          mv cctop.app /Applications/
-          open /Applications/cctop.app
+          curl -sL https://github.com/jakobserlier/catassistant/releases/download/${TAG}/catassistant-macOS-arm64.zip -o catassistant.zip
+          unzip catassistant.zip
+          mv CatAssistant.app /Applications/
+          open /Applications/CatAssistant.app
           \`\`\`
 
           ### macOS (Intel)
           \`\`\`bash
-          curl -sL https://github.com/st0012/cctop/releases/download/${TAG}/cctop-macOS-x86_64.zip -o cctop.zip
-          unzip cctop.zip
-          mv cctop.app /Applications/
-          open /Applications/cctop.app
+          curl -sL https://github.com/jakobserlier/catassistant/releases/download/${TAG}/catassistant-macOS-x86_64.zip -o catassistant.zip
+          unzip catassistant.zip
+          mv CatAssistant.app /Applications/
+          open /Applications/CatAssistant.app
           \`\`\`
 
           ### From source
           Requires Xcode 16+.
           \`\`\`bash
-          git clone https://github.com/st0012/cctop && cd cctop
+          git clone https://github.com/jakobserlier/catassistant && cd catassistant
           ./scripts/bundle-macos.sh
-          cp -R dist/cctop.app /Applications/
+          cp -R dist/CatAssistant.app /Applications/
           \`\`\`
 
           > This release is signed and notarized with Apple Developer ID.
@@ -145,10 +145,10 @@ jobs:
           draft: false
           generate_release_notes: true
           files: |
-            artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip
-            artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip
-            artifacts/cctop-macOS-arm64-dmg/cctop-macOS-arm64.dmg
-            artifacts/cctop-macOS-x86_64-dmg/cctop-macOS-x86_64.dmg
+            artifacts/catassistant-macOS-arm64/catassistant-macOS-arm64.zip
+            artifacts/catassistant-macOS-x86_64/catassistant-macOS-x86_64.zip
+            artifacts/catassistant-macOS-arm64-dmg/catassistant-macOS-arm64.dmg
+            artifacts/catassistant-macOS-x86_64-dmg/catassistant-macOS-x86_64.dmg
           body_path: ${{ runner.temp }}/release-body.md
 
   update-appcast:
@@ -190,8 +190,8 @@ jobs:
         run: |
           ./scripts/generate-appcast.sh \
             --version ${{ steps.version.outputs.version }} \
-            artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip \
-            artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip
+            artifacts/catassistant-macOS-arm64/catassistant-macOS-arm64.zip \
+            artifacts/catassistant-macOS-x86_64/catassistant-macOS-x86_64.zip
 
       - name: Commit and push appcast
         run: |
@@ -226,8 +226,8 @@ jobs:
       - name: Compute SHA256 hashes
         id: sha
         run: |
-          ARM64_SHA=$(sha256sum artifacts/cctop-macOS-arm64/cctop-macOS-arm64.zip | awk '{print $1}')
-          X86_64_SHA=$(sha256sum artifacts/cctop-macOS-x86_64/cctop-macOS-x86_64.zip | awk '{print $1}')
+          ARM64_SHA=$(sha256sum artifacts/catassistant-macOS-arm64/catassistant-macOS-arm64.zip | awk '{print $1}')
+          X86_64_SHA=$(sha256sum artifacts/catassistant-macOS-x86_64/catassistant-macOS-x86_64.zip | awk '{print $1}')
           echo "arm64=$ARM64_SHA" >> "$GITHUB_OUTPUT"
           echo "x86_64=$X86_64_SHA" >> "$GITHUB_OUTPUT"
 
@@ -247,12 +247,12 @@ jobs:
         env:
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
         run: |
-          git clone https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/st0012/homebrew-cctop.git tap
+          git clone https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/jakobserlier/homebrew-catassistant.git tap
           mkdir -p tap/Casks
-          cp packaging/homebrew-cask.rb tap/Casks/cctop.rb
+          cp packaging/homebrew-cask.rb tap/Casks/catassistant.rb
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Casks/cctop.rb
-          git commit -m "Update cctop to ${{ steps.version.outputs.version }}"
+          git add Casks/catassistant.rb
+          git commit -m "Update catassistant to ${{ steps.version.outputs.version }}"
           git push

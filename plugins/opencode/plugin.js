@@ -1,5 +1,5 @@
-// cctop plugin for opencode
-// Writes session state to ~/.cctop/sessions/{pid}.json for the cctop menubar app.
+// CatAssistant plugin for opencode
+// Writes session state to ~/.cat/sessions/{pid}.json for the CatAssistant menubar app.
 // Zero dependencies — runs in-process in Bun.
 
 import { mkdirSync, writeFileSync, renameSync } from "fs";
@@ -7,7 +7,7 @@ import { join, basename } from "path";
 import { homedir } from "os";
 import { execSync } from "child_process";
 
-const SESSIONS_DIR = join(homedir(), ".cctop", "sessions");
+const SESSIONS_DIR = join(homedir(), ".cat", "sessions");
 const PID = process.pid;
 const SESSION_PATH = join(SESSIONS_DIR, `${PID}.json`);
 
@@ -148,7 +148,7 @@ function clearToolState() {
   session.notification_message = null;
 }
 
-export const cctop = async ({ directory }) => {
+export const catassistant = async ({ directory }) => {
   ensureSession(directory);
   updateSession({ status: "idle" });
 

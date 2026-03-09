@@ -1,19 +1,19 @@
 {
-  "name": "cctop",
+  "name": "catassistant",
   "owner": {
-    "name": "Stan Lo",
+    "name": "Jakob Serlier",
     "email": "stan001212@gmail.com"
   },
   "metadata": {
     "description": "AI coding session monitor",
-    "version": "0.7.2"
+    "version": "0.8.2"
   },
   "plugins": [
     {
-      "name": "cctop",
-      "source": "./plugins/cctop",
+      "name": "catassistant",
+      "source": "./plugins/catassistant",
       "description": "Monitor and navigate Claude Code sessions across workspaces",
-      "version": "0.7.2"
+      "version": "0.8.2"
     }
   ]
 }

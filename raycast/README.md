@@ -1,19 +1,19 @@
-# Cctop
+# CatAssistant
 
 Monitor your AI coding sessions from Raycast. See which sessions need attention, what each one is doing, and jump to the right terminal or editor in one action.
 
 ## Prerequisites
 
-This extension requires the **cctop macOS menubar app** to be installed. The app monitors your AI coding sessions and writes status data that this extension reads.
+This extension requires the **CatAssistant macOS menubar app** to be installed. The app monitors your AI coding sessions and writes status data that this extension reads.
 
 Install via Homebrew:
 
 ```bash
-brew tap st0012/cctop
-brew install --cask cctop
+brew tap jakobserlier/catassistant
+brew install --cask catassistant
 ```
 
-Or [download the latest release](https://github.com/st0012/cctop/releases/latest).
+Or [download the latest release](https://github.com/jakobserlier/catassistant/releases/latest).
 
 After installing, follow the app's instructions to connect your tools (Claude Code and/or opencode).
 
@@ -27,4 +27,4 @@ After installing, follow the app's instructions to connect your tools (Claude Co
 
 ## How It Works
 
-The cctop menubar app writes session files to `~/.cctop/sessions/` via plugins for Claude Code and opencode. This Raycast extension reads those files and displays live session status, polling every 2 seconds. No network access is involved — all data stays on your machine.
+The CatAssistant menubar app writes session files to `~/.cat/sessions/` via plugins for Claude Code and opencode. This Raycast extension reads those files and displays live session status, polling every 2 seconds. No network access is involved — all data stays on your machine.

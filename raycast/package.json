@@ -1,10 +1,10 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "cctop",
-  "title": "Cctop - AI Session Monitor",
+  "name": "catassistant",
+  "title": "CatAssistant - AI Session Monitor",
   "description": "Monitor and jump to AI coding sessions (Claude Code, opencode)",
   "icon": "extension-icon.png",
-  "author": "st0012",
+  "author": "jakobserlier",
   "categories": ["Developer Tools"],
   "license": "MIT",
   "commands": [
@@ -13,7 +13,7 @@
       "title": "Show Sessions",
       "description": "View all active AI coding sessions",
       "mode": "view",
-      "keywords": ["session", "claude", "opencode", "ai", "coding", "monitor", "cctop"]
+      "keywords": ["session", "claude", "opencode", "ai", "coding", "monitor", "catassistant"]
     }
   ],
   "scripts": {

@@ -4,7 +4,7 @@ enabledWorkflows:
   - macos
   - ui-automation
 sessionDefaults:
-  projectPath: /Users/st0012/projects/cctop/menubar/CctopMenubar.xcodeproj
-  scheme: CctopMenubar
+  projectPath: /Users/jakobserlier/projects/catassistant/menubar/CatAssistant.xcodeproj
+  scheme: CatAssistant
   configuration: Debug
-  derivedDataPath: /Users/st0012/projects/cctop/menubar/build
+  derivedDataPath: /Users/jakobserlier/projects/catassistant/menubar/build

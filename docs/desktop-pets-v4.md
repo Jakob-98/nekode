@@ -17,17 +17,17 @@ repertoire.
 
 ## Session Sources
 
-Pets are driven by JSON files in `~/.cctop/sessions/`. Any process that
+Pets are driven by JSON files in `~/.cat/sessions/`. Any process that
 writes a conforming JSON file gets a pet. Three sources exist today:
 
-### Claude Code (`cctop-hook`)
+### Claude Code (`cathook`)
 
-A Swift CLI (`cctop-hook`) installed as a Claude Code hook. CC invokes it on
+A Swift CLI (`cathook`) installed as a Claude Code hook. CC invokes it on
 every lifecycle event (SessionStart, UserPromptSubmit, PreToolUse,
 PostToolUse, Stop, Notification, PermissionRequest, PreCompact, SessionEnd).
 The hook reads event JSON from stdin, walks the process tree to find the
 parent PID (skipping shell intermediaries), and writes/updates the session
-file at `~/.cctop/sessions/{pid}.json`.
+file at `~/.cat/sessions/{pid}.json`.
 
 Key behaviors:
 - **PID walking:** Traverses up to 4 parent processes past sh/bash/zsh/fish
@@ -44,7 +44,7 @@ Key behaviors:
 
 ### opencode (JavaScript plugin)
 
-A zero-dependency JS plugin at `~/.config/opencode/plugins/cctop.js`. Runs
+A zero-dependency JS plugin at `~/.config/opencode/plugins/catassistant.js`. Runs
 in-process in Bun. Hooks into opencode's event system:
 
 - `session.created/idle/error/compacted/status/updated/deleted`
@@ -57,12 +57,12 @@ in-process in Bun. Hooks into opencode's event system:
 Maps opencode's `"idle"` event to `waiting_input` (since opencode is always
 interactive — idle means waiting for user input, not sleeping).
 
-### petwait (pipe-based CLI)
+### catwait (pipe-based CLI)
 
 A CLI tool for monitoring arbitrary commands. Usage:
 
 ```
-some-long-command | petwait --name "building"
+some-long-command | catwait --name "building"
 ```
 
 Creates a session with `source: "cli"`, passes stdin through to stdout
@@ -72,14 +72,14 @@ finished" notification and waits for the user to press Enter (reads from
 `/dev/tty`, not stdin). Handles SIGINT/SIGTERM to clean up the session
 file.
 
-Terminal detection works the same as cctop-hook (env vars + parent chain
+Terminal detection works the same as cathook (env vars + parent chain
 TTY walk).
 
 ---
 
 ## Session Discovery
 
-`SessionManager` watches `~/.cctop/sessions/` via:
+`SessionManager` watches `~/.cat/sessions/` via:
 - **Filesystem events:** `DispatchSource.makeFileSystemObjectSource` with
   100ms debounce
 - **Polling:** 2-second `Timer` for liveness checks
@@ -89,7 +89,7 @@ Session liveness requires:
 2. PID hasn't been reused (compares stored `pidStartTime` vs current)
 3. Process isn't orphaned (parent != launchd, i.e. terminal still alive)
 
-Dead sessions are archived to `~/.cctop/history/` and their JSON files
+Dead sessions are archived to `~/.cat/history/` and their JSON files
 removed.
 
 ---
@@ -476,7 +476,7 @@ Each pet lives in its own `PetWindow` (NSPanel subclass):
 ## File Structure
 
 ```
-menubar/CctopMenubar/Pets/
+menubar/CatAssistant/Pets/
   PetKind.swift              # Animal enum (dog/cat/hamster), sprite metadata
   PetState.swift             # 9-case state enum, SessionStatus mapping
   PetModel.swift             # Per-pet state: position, velocity, idle tiers,
@@ -490,22 +490,22 @@ menubar/CctopMenubar/Pets/
                              #   context menu, hidden pets, session sync
   SpriteSheetView.swift      # Sprite sheet cache + CGImage frame extraction
 
-menubar/CctopMenubar/Hook/
-  HookMain.swift             # cctop-hook CLI entry point
+menubar/CatAssistant/Hook/
+  HookMain.swift             # cathook CLI entry point
   HookHandler.swift          # Event processing, PID walking, terminal detection
   HookInput.swift            # Hook JSON input parsing
   HookLogger.swift           # Hook event logging
 
-menubar/CctopMenubar/PetWait/
-  PetWaitMain.swift          # petwait CLI: session lifecycle, terminal detection
+menubar/CatAssistant/CatWait/
+  CatWaitMain.swift          # catwait CLI: session lifecycle, terminal detection
   PipeMonitor.swift          # stdin->stdout passthrough with activity updates
 
-menubar/CctopMenubar/Models/
+menubar/CatAssistant/Models/
   Session.swift              # Session struct, liveness check, file I/O
   SessionStatus.swift        # 6-case status enum
   HookEvent.swift            # Hook event enum + state transition table
 
-menubar/CctopMenubar/Services/
+menubar/CatAssistant/Services/
   SessionManager.swift       # Session discovery: fs watcher + 2s polling
   FocusTerminal.swift        # Terminal/editor focusing (double-click)
   PluginManager.swift        # opencode plugin installation

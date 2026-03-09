@@ -29,16 +29,16 @@ echo "Bumping version to $NEW_VERSION..."
 sed -i '' "s/^  version \".*\"/  version \"$NEW_VERSION\"/" "$REPO_ROOT/packaging/homebrew-cask.rb"
 echo "  Updated packaging/homebrew-cask.rb"
 
-# 2. plugins/cctop/.claude-plugin/plugin.json
-sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/cctop/.claude-plugin/plugin.json"
-echo "  Updated plugins/cctop/.claude-plugin/plugin.json"
+# 2. plugins/catassistant/.claude-plugin/plugin.json
+sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/catassistant/.claude-plugin/plugin.json"
+echo "  Updated plugins/catassistant/.claude-plugin/plugin.json"
 
 # 3. .claude-plugin/marketplace.json (has two version fields)
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/g" "$REPO_ROOT/.claude-plugin/marketplace.json"
 echo "  Updated .claude-plugin/marketplace.json"
 
 # 4. Xcode project - MARKETING_VERSION (all build configs)
-PBXPROJ="$REPO_ROOT/menubar/CctopMenubar.xcodeproj/project.pbxproj"
+PBXPROJ="$REPO_ROOT/menubar/CatAssistant.xcodeproj/project.pbxproj"
 sed -i '' "s/MARKETING_VERSION = .*/MARKETING_VERSION = $NEW_VERSION;/" "$PBXPROJ"
 echo "  Updated pbxproj MARKETING_VERSION"
 
@@ -48,14 +48,14 @@ sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $BUILD_NUM;/
 echo "  Updated pbxproj CURRENT_PROJECT_VERSION to $BUILD_NUM"
 
 # 6. HookMain.swift version string
-HOOK_MAIN="$REPO_ROOT/menubar/CctopMenubar/Hook/HookMain.swift"
+HOOK_MAIN="$REPO_ROOT/menubar/CatAssistant/Hook/HookMain.swift"
 sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$HOOK_MAIN"
 echo "  Updated HookMain.swift version"
 
-# 7b. PetWaitMain.swift version string
-PETWAIT_MAIN="$REPO_ROOT/menubar/CctopMenubar/PetWait/PetWaitMain.swift"
-sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$PETWAIT_MAIN"
-echo "  Updated PetWaitMain.swift version"
+# 7b. CatWaitMain.swift version string
+CATWAIT_MAIN="$REPO_ROOT/menubar/CatAssistant/CatWait/CatWaitMain.swift"
+sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$CATWAIT_MAIN"
+echo "  Updated CatWaitMain.swift version"
 
 # 8. plugins/opencode/package.json
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/opencode/package.json"

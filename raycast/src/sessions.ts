@@ -3,20 +3,20 @@ import { homedir } from "os";
 import { basename, join } from "path";
 
 import {
-  CctopSession,
+  CatSession,
   KNOWN_STATUSES,
   SessionStatus,
   STATUS_SORT_ORDER,
 } from "./types";
 
 /**
- * Returns the sessions directory, checking CCTOP_SESSIONS_DIR env var first.
+ * Returns the sessions directory, checking CAT_SESSIONS_DIR env var first.
  * Matches Config.swift logic.
  */
 export function getSessionsDir(): string {
-  const override = process.env.CCTOP_SESSIONS_DIR;
+  const override = process.env.CAT_SESSIONS_DIR;
   if (override) return override;
-  return join(homedir(), ".cctop", "sessions");
+  return join(homedir(), ".cat", "sessions");
 }
 
 /**
@@ -49,7 +49,7 @@ function parseStatus(raw: string): SessionStatus {
 /**
  * Parse a single session JSON string. Returns null if parsing fails.
  */
-function parseSession(json: string): CctopSession | null {
+function parseSession(json: string): CatSession | null {
   try {
     const raw = JSON.parse(json);
     if (
@@ -92,7 +92,7 @@ function parseSession(json: string): CctopSession | null {
  * - Filters out sessions with no PID or dead PIDs
  * - Sorts by status priority, then by last_activity descending
  */
-export function loadSessions(): CctopSession[] {
+export function loadSessions(): CatSession[] {
   const dir = getSessionsDir();
 
   let files: string[];
@@ -102,7 +102,7 @@ export function loadSessions(): CctopSession[] {
     return [];
   }
 
-  const sessions: CctopSession[] = [];
+  const sessions: CatSession[] = [];
 
   for (const file of files) {
     if (!file.endsWith(".json") || file.endsWith(".tmp")) continue;
@@ -132,7 +132,7 @@ export function loadSessions(): CctopSession[] {
  * Display name: session_name if set, otherwise project_name.
  * Matches Session.swift displayName.
  */
-export function displayName(session: CctopSession): string {
+export function displayName(session: CatSession): string {
   return session.session_name ?? session.project_name;
 }
 
@@ -140,7 +140,7 @@ export function displayName(session: CctopSession): string {
  * Source label: "OC" for opencode, "CC" for Claude Code.
  * Matches Session.swift sourceLabel.
  */
-export function sourceLabel(session: CctopSession): string {
+export function sourceLabel(session: CatSession): string {
   switch (session.source) {
     case "opencode":
       return "OC";
@@ -186,7 +186,7 @@ export function formatToolDisplay(
 }
 
 /** Truncated last_prompt in quotes, matching Session.swift promptSnippet. */
-function promptSnippet(session: CctopSession): string | null {
+function promptSnippet(session: CatSession): string | null {
   if (!session.last_prompt) return null;
   return `"${session.last_prompt.substring(0, 36)}"`;
 }
@@ -195,7 +195,7 @@ function promptSnippet(session: CctopSession): string | null {
  * Context line matching Session.swift contextLine.
  * Returns null for idle sessions.
  */
-export function contextLine(session: CctopSession): string | null {
+export function contextLine(session: CatSession): string | null {
   switch (session.status) {
     case "idle":
       return null;
@@ -240,7 +240,7 @@ export function needsAttention(status: SessionStatus): boolean {
  * Reset a session to idle by modifying its JSON file.
  * Read-modify-write with atomic rename, matching SessionManager.resetSession() in Swift.
  */
-export function resetSession(session: CctopSession): void {
+export function resetSession(session: CatSession): void {
   if (session.pid == null) return;
   const dir = getSessionsDir();
   const filePath = join(dir, `${session.pid}.json`);
@@ -273,10 +273,10 @@ export function statusGroup(status: SessionStatus): StatusGroup {
  * Omits empty groups.
  */
 export function groupSessions(
-  sessions: CctopSession[],
-): { group: StatusGroup; sessions: CctopSession[] }[] {
+  sessions: CatSession[],
+): { group: StatusGroup; sessions: CatSession[] }[] {
   const order: StatusGroup[] = ["Needs Attention", "Active", "Idle"];
-  const grouped = new Map<StatusGroup, CctopSession[]>();
+  const grouped = new Map<StatusGroup, CatSession[]>();
 
   for (const session of sessions) {
     const group = statusGroup(session.status);

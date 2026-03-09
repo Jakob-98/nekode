@@ -1,9 +1,9 @@
 {
-  "name": "cctop-opencode",
-  "version": "0.7.2",
-  "description": "cctop session monitor plugin for opencode",
+  "name": "catassistant-opencode",
+  "version": "0.8.2",
+  "description": "CatAssistant session monitor plugin for opencode",
   "main": "plugin.js",
   "license": "MIT",
-  "author": "Stan Lo",
-  "repository": "https://github.com/st0012/cctop"
+  "author": "Jakob Serlier",
+  "repository": "https://github.com/jakobserlier/catassistant"
 }

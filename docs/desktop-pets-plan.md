@@ -45,7 +45,7 @@ Pets occasionally show short contextual messages ("coding...", "zzz",
 
 ## Architecture
 
-All code lives in `menubar/CctopMenubar/Pets/` (8 files, ~1400 lines total).
+All code lives in `menubar/CatAssistant/Pets/` (8 files, ~1400 lines total).
 No separate Xcode target — pets are part of the menubar app.
 
 ```

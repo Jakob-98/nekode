@@ -1,5 +1,5 @@
 included:
-  - menubar/CctopMenubar
+  - menubar/CatAssistant
 
 excluded:
   - menubar/build

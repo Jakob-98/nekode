@@ -1,4 +1,4 @@
-# cctop Monetization Plan
+# CatAssistant Monetization Plan
 
 ## Model
 
@@ -8,13 +8,13 @@ Paid app with a one-time lifetime license, sold via **Paddle**. Fully functional
 
 ## Why Not the App Store?
 
-cctop's architecture is incompatible with App Sandbox (required for the Mac App Store). The app reads/writes `~/.cctop/`, controls terminals via AppleScript, spawns processes, and exposes a CLI binary (`cctop-hook`) that external tools call into. Porting to the App Store would require a ground-up redesign and degrade the product.
+CatAssistant's architecture is incompatible with App Sandbox (required for the Mac App Store). The app reads/writes `~/.cat/`, controls terminals via AppleScript, spawns processes, and exposes a CLI binary (`cathook`) that external tools call into. Porting to the App Store would require a ground-up redesign and degrade the product.
 
 ## How It Works
 
 - **Distribution stays the same:** Homebrew cask, GitHub Releases, Sparkle auto-update, `.dmg` download. Nothing changes for users.
 - **Everyone gets the full app.** No features are locked. Licensed and unlicensed users are identical except for a small banner.
-- **Nag banner:** A non-intrusive message at the bottom of the popup: *"Support cctop development -- [Purchase a license]"*. Clicking it opens the Paddle checkout. Once purchased, the banner disappears.
+- **Nag banner:** A non-intrusive message at the bottom of the popup: *"Support CatAssistant development -- [Purchase a license]"*. Clicking it opens the Paddle checkout. Once purchased, the banner disappears.
 - **License key stored in Keychain.** Validated against Paddle's API periodically (cached, works offline).
 
 ## Payment & Tax
