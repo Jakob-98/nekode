@@ -65,6 +65,12 @@ class PetManager: ObservableObject {
         self.hiddenPetIds = Set(saved)
         observePreferences()
         observeSessions()
+        // If pets were enabled before restart, start them up now.
+        // observePreferences only reacts to *changes*, so we need
+        // to explicitly enable on launch if the pref is already set.
+        if enabled {
+            enable()
+        }
     }
 
     // MARK: - Preference Observation
@@ -153,7 +159,7 @@ class PetManager: ObservableObject {
     @discardableResult
     func spawnPet(for session: Session) -> PetModel {
         let screen = NSScreen.main?.visibleFrame ?? PetPhysics.fallbackScreen
-        let kind = PetKind.random()
+        let kind = PetKind.randomUnassigned(excluding: Set(pets.values.map(\.kind)))
         let zone = vibeZone
         let pet = PetModel(session: session, kind: kind, screenBounds: screen, vibeZone: zone)
 
@@ -282,7 +288,7 @@ class PetManager: ObservableObject {
 
         menu.addItem(.separator())
 
-        // Change Animal submenu
+        // Change Color submenu
         let animalMenu = NSMenu()
         for kind in PetKind.allCases {
             let item = NSMenuItem(
@@ -296,7 +302,7 @@ class PetManager: ObservableObject {
             item.state = (kind == pet.kind) ? .on : .off
             animalMenu.addItem(item)
         }
-        let animalItem = NSMenuItem(title: "Change Animal", action: nil, keyEquivalent: "")
+        let animalItem = NSMenuItem(title: "Change Color", action: nil, keyEquivalent: "")
         animalItem.submenu = animalMenu
         menu.addItem(animalItem)
 

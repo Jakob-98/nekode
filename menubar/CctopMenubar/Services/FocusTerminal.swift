@@ -2,6 +2,7 @@ import AppKit
 
 func focusTerminal(session: Session) {
     guard let terminal = session.terminal else {
+        // No terminal info at all — open project in Finder as last resort
         NSWorkspace.shared.open(URL(fileURLWithPath: session.projectPath))
         return
     }
@@ -18,8 +19,12 @@ func focusTerminal(session: Session) {
         if !focusITerm2Session(sessionId: terminal.sessionId) {
             if let name = hostApp.activationName { activateAppByName(name) }
         }
+    } else if activateByBundleID(hostApp.bundleID) {
+        // Activated via bundle ID (Ghostty, Kitty, Alacritty, Warp, Terminal, etc.)
     } else if let name = hostApp.activationName, activateAppByName(name) {
-        // activated successfully
+        // Activated via localizedName match
+    } else if activateAppByName(terminal.program.lowercased()) {
+        // Fallback: try raw TERM_PROGRAM value as activation name
     } else {
         NSWorkspace.shared.open(URL(fileURLWithPath: session.projectPath))
     }
@@ -108,6 +113,18 @@ private func activateAppByName(_ program: String) -> Bool {
     guard let app = NSWorkspace.shared.runningApplications.first(where: {
         $0.localizedName?.lowercased().contains(program) == true
     }) else {
+        return false
+    }
+    app.activate()
+    return true
+}
+
+@discardableResult
+private func activateByBundleID(_ bundleID: String?) -> Bool {
+    guard let bundleID = bundleID,
+          let app = NSWorkspace.shared.runningApplications.first(where: {
+              $0.bundleIdentifier == bundleID
+          }) else {
         return false
     }
     app.activate()

@@ -61,6 +61,7 @@ struct PetView: View {
                 frame: pet.currentFrame,
                 petSize: petSize
             )
+            .scaleEffect(pet.visualState.spriteScale)
             .scaleEffect(x: pet.facingRight ? 1 : -1, y: 1)
             .scaleEffect(x: pet.scaleX, y: pet.scaleY)
             .scaleEffect(pet.scale)
@@ -272,16 +273,16 @@ struct PetNameTag: View {
 
 // MARK: - Preview
 
-#Preview("Dog Walking") {
-    PetPreviewFactory.makePreview(status: .working, kind: .dog)
+#Preview("Pochi Sitting") {
+    PetPreviewFactory.makePreview(status: .working, kind: .pochi)
 }
 
-#Preview("Cat Alerting") {
-    PetPreviewFactory.makePreview(status: .waitingInput, kind: .cat)
+#Preview("Black Cat Alerting") {
+    PetPreviewFactory.makePreview(status: .waitingInput, kind: .pochiBlack)
 }
 
-#Preview("Hamster Sleeping") {
-    PetPreviewFactory.makePreview(status: .idle, kind: .hamster)
+#Preview("Orange Cat Sleeping") {
+    PetPreviewFactory.makePreview(status: .idle, kind: .pochiOrange)
 }
 
 /// Factory to work around `#Preview` result builder limitations with imperative setup.

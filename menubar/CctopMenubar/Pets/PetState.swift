@@ -1,69 +1,136 @@
 import Foundation
 
+/// Pet animation states — maps to rows in the Pochi sprite sheet.
+///
+/// Row/frame metadata lives in `SpriteGridConfig.swift` (PochiSpriteGrid).
+/// This enum defines behavioral states; sprite details are looked up from
+/// the grid config via `gridKey`.
 enum PetState: Int, CaseIterable {
-    case sleeping       // session idle (no activity)
-    case sitting        // session working (agent is busy, pet chills)
-    case walking        // roaming (transitional or gentle movement)
-    case running        // attention seeking (chasing mouse cursor)
-    case alerting       // waitingInput, needsAttention
-    case barking        // waitingPermission
-    case spinning       // compacting
-    case appearing      // spawn animation
-    case disappearing   // despawn animation
+    // Core states (set by session status mapping)
+    case sitting        // session working (agent busy, pet chills)          → row 0
+    case sleeping       // session idle (no activity)                        → row 3
+    case alerting       // waitingInput, needsAttention — hurt walk         → row 17
+    case barking        // waitingPermission — dash/burst                   → row 18
+    case spinning       // compacting                                        → row 8
 
-    /// Which row in the sprite sheet this state corresponds to.
-    var spriteRow: Int {
+    // Movement states (set by visualState or animation engine)
+    case walking        // gentle movement to home/vibe zone                → row 5
+    case running        // fast chase (attention stage 4)                   → row 6
+    case sneaking       // low crawl — bored idle variant                   → row 4
+    case dashing        // burst run-in from screen edge                    → row 18
+
+    // Idle variant states (cycled through during working/idle)
+    case standing       // standing idle / attentive                         → row 1
+    case boxIdle        // sitting in box (idle)                             → row 7
+    case boxWiggle      // box wiggle / playful shake                       → row 8
+
+    // Expression states (set by animation engine for transitions)
+    case dancing        // happy dance — satisfied after attention resolved  → row 11
+    case crying         // sad / frustrated                                  → row 10
+    case grooming       // face cleaning — idle variant                     → row 13
+    case lookingUp      // sitting looking up — idle variant                → row 12
+    case rollingOver    // rolling onto back — playful idle                 → row 14
+
+    // Lifecycle
+    case appearing      // spawn animation                                   → row 0
+    case disappearing   // despawn animation                                 → row 0
+
+    // MARK: - Grid Config Key
+
+    /// Maps this state to its key in `PochiSpriteGrid`.
+    /// Multiple states can share a grid key (e.g. spinning/boxWiggle → "boxWiggle",
+    /// barking/dashing → "dashing"). Lifecycle states fall back to "sitting".
+    var gridKey: String {
         switch self {
-        case .sleeping: return 3
-        case .sitting: return 0
-        case .walking: return 1
-        case .running: return 2
-        case .alerting: return 4
-        case .barking: return 4
-        case .spinning: return 5
-        case .appearing: return 0
-        case .disappearing: return 0
+        case .sitting:      return "sitting"
+        case .sleeping:     return "sleeping"
+        case .alerting:     return "alerting"
+        case .barking:      return "dashing"      // shares row 18 with dashing
+        case .spinning:     return "boxWiggle"    // shares row 8 with boxWiggle
+        case .walking:      return "walking"
+        case .running:      return "running"
+        case .sneaking:     return "sneaking"
+        case .dashing:      return "dashing"
+        case .standing:     return "standing"
+        case .boxIdle:      return "boxIdle"
+        case .boxWiggle:    return "boxWiggle"
+        case .dancing:      return "dancing"
+        case .crying:       return "crying"
+        case .grooming:     return "grooming"
+        case .lookingUp:    return "lookingUp"
+        case .rollingOver:  return "rollingOver"
+        case .appearing:    return "sitting"      // lifecycle: use sitting sprite
+        case .disappearing: return "sitting"      // lifecycle: use sitting sprite
         }
     }
+
+    /// The grid config entry for this state.
+    private var gridConfig: SpriteRowConfig {
+        PochiSpriteGrid.config(for: gridKey)!
+    }
+
+    // MARK: - Sprite Properties (derived from grid config)
+
+    /// Which row in the Pochi sprite sheet this state uses.
+    var spriteRow: Int { gridConfig.row }
 
     /// Number of animation frames for this state.
-    /// Dog/cat have 6-frame walk/run; hamster has 4.
-    /// Use `frameCount(for:)` for per-kind counts.
     var frameCount: Int {
         switch self {
-        case .sleeping: return 2
-        case .sitting: return 4
-        case .walking: return 6   // Clamped per-kind in engine
-        case .running: return 6   // Clamped per-kind in engine
-        case .alerting: return 4
-        case .barking: return 4
-        case .spinning: return 4
-        case .appearing: return 1
-        case .disappearing: return 1
+        case .appearing, .disappearing: return 1  // Single frame for lifecycle
+        default: return gridConfig.frames
         }
     }
 
-    /// Per-kind frame count (handles dog/cat vs hamster differences).
+    /// Per-kind frame count — all Pochi variants share the same grid,
+    /// so this just returns the base frameCount.
     func frameCount(for kind: PetKind) -> Int {
-        switch (self, kind) {
-        case (.walking, .hamster), (.running, .hamster):
-            return 4
-        default:
-            return frameCount
+        frameCount
+    }
+
+    /// Maps a logical frame index to the actual sprite column.
+    /// For rows with skipped columns, remaps logical indices to skip
+    /// over the gaps defined in the grid config.
+    func spriteColumn(for logicalFrame: Int) -> Int {
+        let skips = gridConfig.skipColumns
+        guard !skips.isEmpty else { return logicalFrame }
+        // Walk through columns, skipping the ones in the skip set
+        var column = 0
+        var logical = 0
+        while logical < logicalFrame {
+            column += 1
+            if !skips.contains(column) {
+                logical += 1
+            }
         }
+        // Skip the starting column if it's in the skip set
+        while skips.contains(column) {
+            column += 1
+        }
+        return column
     }
 
     /// Whether this animation loops continuously.
     var loops: Bool {
         switch self {
-        case .appearing, .disappearing: return false
-        default: return true
+        case .appearing, .disappearing: return false  // Lifecycle never loops
+        default: return gridConfig.loops
+        }
+    }
+
+    /// Scale factor for the sprite. Walking/running/movement animations
+    /// use the full cell; stationary poses render slightly smaller (85%)
+    /// so the visual sizes feel consistent.
+    var spriteScale: CGFloat {
+        switch self {
+        case .walking, .running, .sneaking, .dashing, .alerting, .barking:
+            return 1.0
+        default:
+            return 0.85
         }
     }
 
     /// Map a SessionStatus to the corresponding pet animation state.
-    /// Working = sitting (pet chills while agent is busy)
-    /// Attention states = running (pet chases mouse cursor)
     init(from status: SessionStatus) {
         switch status {
         case .idle: self = .sleeping
@@ -74,9 +141,7 @@ enum PetState: Int, CaseIterable {
         }
     }
 
-    /// Whether the pet should be actively moving in this state.
-    /// Note: .walking and .running are visual-only states (used by visualState
-    /// for sprite selection) and are never set as actual pet states.
+    /// Whether the pet should be actively chasing the cursor.
     var isMoving: Bool {
         switch self {
         case .alerting, .barking: return true

@@ -73,7 +73,7 @@ class PetModel: ObservableObject, Identifiable {
 
     /// Current attention escalation stage (1-4), computed from `attentionTime`.
     var attentionStage: Int {
-        if attentionTime < 10 { return 1 }    // Perk up (stay put, face cursor)
+        if attentionTime < 4 { return 1 }     // Perk up (stay put, face cursor)
         if attentionTime < 30 { return 2 }    // Approach (walk toward, 50px stop)
         if attentionTime < 60 { return 3 }    // Insistent (faster, 30px stop)
         return 4                               // Urgent (run, 20px stop, bounce)
@@ -122,6 +122,43 @@ class PetModel: ObservableObject, Identifiable {
         return 3                            // Drowsy (120s+)
     }
 
+    // MARK: - Idle Animation Cycling
+
+    /// Pool of idle animations to cycle through while working/idle.
+    /// Sitting is weighted heavily since it's the default resting pose.
+    static let idleAnimations: [PetState] = [
+        .sitting, .sitting, .sitting, .sitting,  // ~33% chance: default rest
+        .standing,                                // standing idle / attentive
+        .lookingUp,                               // sitting looking up
+        .grooming,                                // face cleaning
+        .boxIdle,                                 // sitting in box
+        .boxWiggle,                               // box wiggle
+        .sneaking,                                // low crawl / restless stalk
+        .sleeping,                                // curled nap
+        .sleeping,                                // extra weight — common rest
+    ]
+
+    /// How long (seconds) a given idle animation should play before cycling.
+    /// Longer for relaxed poses, shorter for fidgety ones.
+    static func idleDuration(for state: PetState) -> Double {
+        switch state {
+        case .sitting:    return Double.random(in: 15...30)
+        case .standing:   return Double.random(in: 10...18)
+        case .lookingUp:  return Double.random(in: 12...20)
+        case .grooming:   return Double.random(in: 10...16)
+        case .boxIdle:    return Double.random(in: 20...40)
+        case .boxWiggle:  return Double.random(in: 8...14)
+        case .sneaking:   return Double.random(in: 8...15)
+        case .sleeping:   return Double.random(in: 18...35)
+        default:          return Double.random(in: 12...20)
+        }
+    }
+
+    /// Index into `idleAnimations` for the current idle pose.
+    var idleAnimationIndex: Int = 0
+    /// Seconds remaining before cycling to the next idle animation.
+    var idleAnimationTimer: Double = Double.random(in: 15...30)
+
     // MARK: - Speech Bubbles
 
     @Published var activeBubbleText: String?
@@ -150,16 +187,59 @@ class PetModel: ObservableObject, Identifiable {
 
     @Published var dustParticles: [DustParticle] = []
 
+    // MARK: - Celebration (satisfied dance after attention resolved)
+
+    /// When true, the pet plays the dancing animation briefly.
+    /// Set by the animation engine when transitioning out of attention state.
+    var isCelebrating: Bool = false
+    /// Remaining time for the celebration animation.
+    var celebrationTimeRemaining: Double = 0
+
     // MARK: - Computed
 
     var displayName: String { session.displayName }
     var needsAttention: Bool { session.status.needsAttention }
 
-    /// The visual state for sprite rendering — uses walking animation while
-    /// the pet is moving to its home spot, even if logical state is sitting.
+    /// The visual state for sprite rendering — overrides the logical state
+    /// to pick richer animations based on context.
     var visualState: PetState {
+        // Celebration dance overrides everything
+        if isCelebrating {
+            return .dancing
+        }
+        // Run-in uses dash animation
+        if isRunningIn {
+            return .dashing
+        }
+        // Attention-seeking: use richer visuals based on escalation stage
+        if state == .alerting {
+            switch attentionStage {
+            case 1:    return .standing     // Perk up — attentive stance
+            case 2:    return .alerting     // Hurt walk — approaching
+            case 3:    return .barking      // Dash/burst — insistent
+            default:   return .running      // Urgent — full run
+            }
+        }
+        if state == .barking {
+            switch attentionStage {
+            case 1:    return .standing     // Perk up — attentive stance
+            case 2:    return .alerting     // Hurt walk — approaching
+            case 3:    return .barking      // Dash/burst
+            default:   return .running      // Urgent — full run
+            }
+        }
+        // Sitting pet that's moving → walking animation
         if state == .sitting && velocity != .zero {
             return .walking
+        }
+        // Sleeping pet that's drifting → sneaking animation (low crawl)
+        if state == .sleeping && velocity != .zero {
+            return .sneaking
+        }
+        // Sitting pet that's stationary → cycle through idle animations
+        if state == .sitting && velocity == .zero {
+            let idleAnim = PetModel.idleAnimations[idleAnimationIndex % PetModel.idleAnimations.count]
+            return idleAnim
         }
         return state
     }

@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Sprite Sheet Cache
 
 /// Caches loaded and sliced sprite frames to avoid re-cropping every tick.
-/// Uses CGImage-based cropping to correctly handle @2x Retina sprites.
+/// Uses CGImage-based cropping from the combined sprite sheet PNG.
 @MainActor
 final class SpriteSheetCache {
     static let shared = SpriteSheetCache()
@@ -24,7 +24,7 @@ final class SpriteSheetCache {
 
         guard let sheet = loadSheet(kind: kind) else { return nil }
 
-        // Work in pixels — the CGImage is the full @2x bitmap
+        // Work in pixels — the CGImage is the raw bitmap from the sheet
         let cellPx = kind.cellSizePixels
         let srcX = column * cellPx
         let srcY = row * cellPx   // Row 0 = top of image, CGImage (0,0) = top-left ✓
@@ -40,8 +40,7 @@ final class SpriteSheetCache {
             return nil
         }
 
-        // Create NSImage with correct backing scale so it renders sharp
-        // on Retina. Point size = pixel size / 2 for @2x.
+        // Create NSImage at the cell's point size for sharp rendering.
         let pointSize = kind.cellSize
         let result = NSImage(cgImage: croppedCG, size: pointSize)
 
@@ -58,7 +57,7 @@ final class SpriteSheetCache {
         }
         guard let nsImage = NSImage(named: name) else { return nil }
 
-        // Get the highest-resolution CGImage representation (the @2x bitmap)
+        // Get the highest-resolution CGImage representation
         guard let cgImage = nsImage.bestCGImage() else { return nil }
         let entry = (
             cgImage: cgImage,
@@ -94,9 +93,9 @@ extension NSImage {
             }
         }
         if let best { return best }
-        // Fallback: render into a CGContext at 2x
-        let pxW = Int(size.width * 2)
-        let pxH = Int(size.height * 2)
+        // Fallback: render into a CGContext at 1x (pixel art, no upscaling)
+        let pxW = Int(size.width)
+        let pxH = Int(size.height)
         guard let ctx = CGContext(
             data: nil, width: pxW, height: pxH,
             bitsPerComponent: 8, bytesPerRow: 0,
@@ -125,7 +124,7 @@ struct SpriteSheetView: View {
         if let frameImage = SpriteSheetCache.shared.frame(
             kind: kind,
             row: state.spriteRow,
-            column: frame
+            column: state.spriteColumn(for: frame)
         ) {
             Image(nsImage: frameImage)
                 .interpolation(.none)     // Pixel-perfect scaling

@@ -6,7 +6,7 @@ import XCTest
 final class PetStateTests: XCTestCase {
 
     func testAllCasesCount() {
-        XCTAssertEqual(PetState.allCases.count, 9)
+        XCTAssertEqual(PetState.allCases.count, 19)
     }
 
     func testSpriteRowNonNegativeForAllCases() {
@@ -55,13 +55,13 @@ final class PetStateTests: XCTestCase {
 final class PetKindTests: XCTestCase {
 
     func testAllCasesCount() {
-        XCTAssertEqual(PetKind.allCases.count, 3)
+        XCTAssertEqual(PetKind.allCases.count, 6)
     }
 
-    func testCellSizeIs24x24() {
+    func testCellSizeIs64x64() {
         for kind in PetKind.allCases {
-            XCTAssertEqual(kind.cellSize.width, 24)
-            XCTAssertEqual(kind.cellSize.height, 24)
+            XCTAssertEqual(kind.cellSize.width, 64)
+            XCTAssertEqual(kind.cellSize.height, 64)
         }
     }
 
@@ -73,9 +73,9 @@ final class PetKindTests: XCTestCase {
         }
     }
 
-    func testRandomReturnsValidKind() {
+    func testRandomUnassignedReturnsValidKind() {
         for _ in 0..<20 {
-            XCTAssertTrue(PetKind.allCases.contains(PetKind.random()))
+            XCTAssertTrue(PetKind.allCases.contains(PetKind.randomUnassigned(excluding: [])))
         }
     }
 }
@@ -88,7 +88,7 @@ final class PetModelTests: XCTestCase {
 
     func testInitSetsIdFromSession() {
         let session = Session.mock(status: .idle, pid: 12345)
-        let pet = PetModel(session: session, kind: .dog, screenBounds: screenBounds)
+        let pet = PetModel(session: session, kind: .pochi, screenBounds: screenBounds)
         XCTAssertEqual(pet.id, "12345")
     }
 
@@ -139,7 +139,7 @@ final class PetModelTests: XCTestCase {
     private func makePet(status: SessionStatus = .idle) -> PetModel {
         PetModel(
             session: .mock(status: status, pid: 999),
-            kind: .dog,
+            kind: .pochi,
             screenBounds: screenBounds
         )
     }
@@ -286,7 +286,7 @@ final class PetAnimationEngineTests: XCTestCase {
         // Give distinct IDs
         let session2 = Session.mock(status: .waitingInput, pid: 998)
         let petB = PetModel(
-            session: session2, kind: .cat, screenBounds: screenBounds
+            session: session2, kind: .pochiBlack, screenBounds: screenBounds
         )
         pet1.state = .alerting
         pet1.attentionTime = 15  // Stage 2
@@ -321,7 +321,7 @@ final class PetAnimationEngineTests: XCTestCase {
         // Distinct ID so gatheringTarget's id filter doesn't exclude pet2
         let pet2 = PetModel(
             session: .mock(id: "other-pet", status: .idle, pid: 998),
-            kind: .cat, screenBounds: screenBounds
+            kind: .pochiBlack, screenBounds: screenBounds
         )
         finishAppearing(pet1)
         finishAppearing(pet2)
@@ -345,7 +345,7 @@ final class PetAnimationEngineTests: XCTestCase {
         // Distinct ID so the filter actually includes pet2
         let pet2 = PetModel(
             session: .mock(id: "other-pet", status: .idle, pid: 998),
-            kind: .cat, screenBounds: screenBounds
+            kind: .pochiBlack, screenBounds: screenBounds
         )
         finishAppearing(pet1)
         finishAppearing(pet2)
@@ -376,7 +376,7 @@ final class PetAnimationEngineTests: XCTestCase {
     private func makePet() -> PetModel {
         PetModel(
             session: .mock(status: .idle, pid: 999),
-            kind: .dog,
+            kind: .pochi,
             screenBounds: screenBounds
         )
     }
@@ -385,6 +385,52 @@ final class PetAnimationEngineTests: XCTestCase {
         pet.isAppearing = false
         pet.opacity = 1.0
         pet.scale = 1.0
+    }
+}
+
+// MARK: - SpriteGridConfig Smoke Tests
+
+final class SpriteGridConfigTests: XCTestCase {
+
+    func testAllRowsHavePositiveFrames() {
+        for (key, config) in PochiSpriteGrid.allRows {
+            XCTAssertGreaterThan(config.frames, 0, "Row '\(key)' has 0 frames")
+        }
+    }
+
+    func testAllRowsHaveUniqueRows() {
+        // Not all are unique (some states share rows), but each key should resolve
+        for (key, _) in PochiSpriteGrid.allRows {
+            XCTAssertNotNil(PochiSpriteGrid.config(for: key), "Missing config for '\(key)'")
+        }
+    }
+
+    func testSleepingHas4Frames() {
+        let config = PochiSpriteGrid.config(for: "sleeping")
+        XCTAssertNotNil(config)
+        XCTAssertEqual(config!.frames, 4)
+    }
+
+    func testAlertingSkipsColumn6() {
+        let config = PochiSpriteGrid.config(for: "alerting")
+        XCTAssertNotNil(config)
+        XCTAssertTrue(config!.skipColumns.contains(6))
+        XCTAssertEqual(config!.frames, 7)
+    }
+
+    func testBoxIdleDoesNotLoop() {
+        let config = PochiSpriteGrid.config(for: "boxIdle")
+        XCTAssertNotNil(config)
+        XCTAssertFalse(config!.loops)
+    }
+
+    func testAllPetStatesHaveValidGridKey() {
+        for state in PetState.allCases {
+            XCTAssertNotNil(
+                PochiSpriteGrid.config(for: state.gridKey),
+                "PetState.\(state) has invalid gridKey '\(state.gridKey)'"
+            )
+        }
     }
 }
 

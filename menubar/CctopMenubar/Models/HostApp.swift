@@ -10,6 +10,9 @@ enum HostApp {
     case iterm2
     case warp
     case terminal
+    case ghostty
+    case kitty
+    case alacritty
     case unknown
 
     /// Match program name to a HostApp.
@@ -24,6 +27,9 @@ enum HostApp {
         if lower.contains("code") { return .vscode }
         if lower.contains("iterm") { return .iterm2 }
         if lower.contains("warp") { return .warp }
+        if lower.contains("ghostty") { return .ghostty }
+        if lower.contains("kitty") { return .kitty }
+        if lower.contains("alacritty") { return .alacritty }
         if lower.contains("terminal") { return .terminal }
         return .unknown
     }
@@ -37,6 +43,9 @@ enum HostApp {
         case .iterm2: return "com.googlecode.iterm2"
         case .warp: return "dev.warp.Warp-Stable"
         case .terminal: return "com.apple.Terminal"
+        case .ghostty: return "com.mitchellh.ghostty"
+        case .kitty: return "net.kovidgoyal.kitty"
+        case .alacritty: return "org.alacritty"
         case .unknown: return nil
         }
     }
@@ -51,6 +60,9 @@ enum HostApp {
         case .iterm2: return "iterm2"
         case .warp: return "warp"
         case .terminal: return "terminal"
+        case .ghostty: return "ghostty"
+        case .kitty: return "kitty"
+        case .alacritty: return "alacritty"
         case .unknown: return nil
         }
     }
@@ -59,7 +71,7 @@ enum HostApp {
         switch self {
         case .vscode, .cursor, .windsurf, .zed:
             return "chevron.left.forwardslash.chevron.right"
-        case .iterm2, .warp, .terminal, .unknown:
+        case .iterm2, .warp, .terminal, .ghostty, .kitty, .alacritty, .unknown:
             return "terminal"
         }
     }
@@ -68,7 +80,7 @@ enum HostApp {
     var usesWorkspaceFile: Bool {
         switch self {
         case .vscode, .cursor, .windsurf, .zed: return true
-        case .iterm2, .warp, .terminal, .unknown: return false
+        case .iterm2, .warp, .terminal, .ghostty, .kitty, .alacritty, .unknown: return false
         }
     }
 

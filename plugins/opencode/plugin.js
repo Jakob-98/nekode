@@ -107,6 +107,9 @@ function writeSession(session) {
 
 // In-memory session state
 let session = null;
+// True while the question tool is blocking on user input.
+// Prevents session.status "busy" and tool.execute.after from overriding waiting_input.
+let questionPending = false;
 
 function ensureSession(directory) {
   if (session) return;
@@ -165,6 +168,7 @@ export const cctop = async ({ directory }) => {
           break;
 
         case "session.idle":
+          questionPending = false;
           clearToolState();
           // opencode is always interactive; idle = waiting for user input
           updateSession({ status: "waiting_input" });
@@ -189,7 +193,10 @@ export const cctop = async ({ directory }) => {
             || event.properties?.type
             || event.status?.type;
           if (type === "busy") {
-            updateSession({ status: "working" });
+            // Don't override waiting states (question tool or permission request)
+            if (!questionPending && session?.status !== "waiting_permission") {
+              updateSession({ status: "working" });
+            }
           } else if (type === "retry") {
             updateSession({ status: "needs_attention" });
           }
@@ -200,6 +207,7 @@ export const cctop = async ({ directory }) => {
 
         case "permission.replied":
           // Permission resolved (approved or denied) — agent will proceed
+          questionPending = false;
           clearToolState();
           updateSession({ status: "working" });
           break;
@@ -217,6 +225,7 @@ export const cctop = async ({ directory }) => {
     },
 
     "chat.message": async (_input, output) => {
+      questionPending = false;
       clearToolState();
       const prompt = output?.message?.content
         || output?.content
@@ -233,6 +242,7 @@ export const cctop = async ({ directory }) => {
       // The "question" tool asks the user for input and blocks until they respond.
       // Treat it as waiting_input so the session shows as needing attention.
       const isQuestion = tool && tool.toLowerCase() === "question";
+      questionPending = isQuestion;
       updateSession({
         status: isQuestion ? "waiting_input" : "working",
         last_tool: tool,
@@ -242,7 +252,10 @@ export const cctop = async ({ directory }) => {
     },
 
     "tool.execute.after": async () => {
-      // Resume working status — important after question tool (waiting_input)
+      // Don't override waiting_input if the question tool is still blocking.
+      // The question tool's "after" fires when it returns (user answered),
+      // but session.status "busy" or chat.message will follow to set working.
+      if (questionPending) return;
       updateSession({ status: "working" });
     },
 

@@ -6,13 +6,13 @@ import QuartzCore
 
 enum PetPhysics {
     static let roamSpeed: CGFloat = 70           // pt/s when roaming (2D)
-    static let attentionSpeed: CGFloat = 120     // pt/s when chasing mouse cursor
-    static let idleWalkSpeed: CGFloat = 60       // pt/s when walking to rest spot
+    static let attentionSpeed: CGFloat = 180     // pt/s when chasing mouse cursor
+    static let idleWalkSpeed: CGFloat = 90       // pt/s when walking to rest spot
     static let runInSpeed: CGFloat = 140         // pt/s when running in from screen edge
     static let vibeWanderSpeed: CGFloat = 40     // pt/s gentle wander inside vibe zone
     static let sleepDriftSpeed: CGFloat = 12     // pt/s very slow sleeping drift
-    static let acceleration: CGFloat = 300       // pt/s² how fast pet reaches max speed
-    static let deceleration: CGFloat = 400       // pt/s² how fast pet stops
+    static let acceleration: CGFloat = 450       // pt/s² how fast pet reaches max speed
+    static let deceleration: CGFloat = 600       // pt/s² how fast pet stops
     static let pauseDurationMin: Double = 1      // min pause duration
     static let pauseDurationMax: Double = 3      // max pause duration
     static let personalSpace: CGFloat = 60        // min center-to-center distance between pets
@@ -70,6 +70,25 @@ enum PetAnimationEngine {
         // Don't move while dragging — pet stays where user is holding it
         guard !pet.isDragging else { return }
 
+        // Tick celebration dance timer
+        if pet.isCelebrating {
+            pet.celebrationTimeRemaining -= dt
+            if pet.celebrationTimeRemaining <= 0 {
+                pet.isCelebrating = false
+                pet.currentFrame = 0
+                pet.frameAccumulator = 0
+            } else {
+                // During celebration: stand still, just animate the dance sprite
+                pet.velocity = .zero
+                stepAnimation(pet, dt: dt)
+                pet.breathAccumulator += dt
+                updateSquash(pet, dt: dt)
+                updateDustParticles(pet, dt: dt)
+                updateSpeechBubble(pet, dt: dt)
+                return
+            }
+        }
+
         // Handle run-in from screen edge (spawn animation)
         // If an attention-seeking state arrived during run-in, abort run-in
         // so the pet can chase the cursor immediately.
@@ -99,7 +118,7 @@ enum PetAnimationEngine {
                 allPets: allPets
             )
         case .sitting:
-            updateIdleResting(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone)
+            updateIdleResting(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone, allPets: allPets)
         case .sleeping:
             // Sleeping pets still gently wander within the vibe zone
             updateSleepingWander(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone)
@@ -117,6 +136,24 @@ enum PetAnimationEngine {
         // updateStateTransition) or when moving to a non-sitting state.
         if pet.state == .sitting {
             pet.idleTime += dt
+
+            // Cycle idle animation when sitting and stationary.
+            // facingRight is NOT touched here — the pet keeps facing
+            // whichever direction it was last walking.
+            if pet.velocity == .zero {
+                pet.idleAnimationTimer -= dt
+                if pet.idleAnimationTimer <= 0 {
+                    let oldIndex = pet.idleAnimationIndex
+                    pet.idleAnimationIndex = (pet.idleAnimationIndex + 1) % PetModel.idleAnimations.count
+                    // Reset frame when switching to a new idle animation
+                    if oldIndex != pet.idleAnimationIndex {
+                        pet.currentFrame = 0
+                        pet.frameAccumulator = 0
+                    }
+                    let nextAnim = PetModel.idleAnimations[pet.idleAnimationIndex % PetModel.idleAnimations.count]
+                    pet.idleAnimationTimer = PetModel.idleDuration(for: nextAnim)
+                }
+            }
         } else if pet.state != .sleeping {
             // Don't reset idle time during sleep (preserves the idle→sleep
             // transition's meaning). Reset when entering any other active state.
@@ -173,8 +210,9 @@ enum PetAnimationEngine {
         let framesToAdvance = Int(pet.frameAccumulator)
         if framesToAdvance > 0 {
             pet.frameAccumulator -= Double(framesToAdvance)
-            let maxFrames = pet.visualState.frameCount(for: pet.kind)
-            if pet.state.loops {
+            let visual = pet.visualState
+            let maxFrames = visual.frameCount(for: pet.kind)
+            if visual.loops {
                 pet.currentFrame = (
                     pet.currentFrame + framesToAdvance
                 ) % maxFrames
@@ -346,7 +384,7 @@ enum PetAnimationEngine {
 
     static func updateIdleResting(
         _ pet: PetModel, dt: TimeInterval, screenBounds: CGRect,
-        vibeZone: CGRect? = nil
+        vibeZone: CGRect? = nil, allPets: [PetModel] = []
     ) {
         // If pet has a custom home (user dragged it), walk toward that home
         if pet.hasCustomHome {
@@ -365,7 +403,7 @@ enum PetAnimationEngine {
             // If pet has no home or home is outside the vibe zone, pick a new one
             let expandedZone = safeInset(zone, dx: -30, dy: -30)
             if pet.lastDropPosition == nil || !expandedZone.contains(pet.lastDropPosition!) {
-                pet.lastDropPosition = randomPointInZone(zone)
+                pet.lastDropPosition = randomPointInZoneAvoiding(zone, pet: pet, allPets: allPets)
             }
 
             guard let home = pet.lastDropPosition else {
@@ -383,6 +421,9 @@ enum PetAnimationEngine {
                     triggerSquash(pet, scaleX: 1.08, scaleY: 0.92, duration: 0.12)
                     spawnDust(pet)
                     pet.velocity = .zero
+                    // Reset idle animation frame on arrival (visual state changes)
+                    pet.currentFrame = 0
+                    pet.frameAccumulator = 0
                     // Schedule next wander after a random pause
                     pet.roamPauseUntil = now + Double.random(in: 3...10)
                 }
@@ -390,7 +431,7 @@ enum PetAnimationEngine {
                 // After the pause, pick a new random spot in the vibe zone
                 // (idleTime continues accumulating — no reset here)
                 if now >= pet.roamPauseUntil && pet.velocity == .zero {
-                    pet.lastDropPosition = randomPointInZone(zone)
+                    pet.lastDropPosition = randomPointInZoneAvoiding(zone, pet: pet, allPets: allPets)
                 }
             } else {
                 // Walk toward current target
@@ -521,6 +562,35 @@ enum PetAnimationEngine {
         )
     }
 
+    /// Pick a random point in the zone that's at least `personalSpace` away
+    /// from all other pets' positions and targets. Falls back to a basic
+    /// random point after a few attempts to avoid infinite loops.
+    private static func randomPointInZoneAvoiding(
+        _ zone: CGRect, pet: PetModel, allPets: [PetModel]
+    ) -> CGPoint {
+        let others = allPets.filter { $0.id != pet.id && !$0.isDragging }
+        let minDist = PetPhysics.personalSpace
+
+        for _ in 0..<8 {
+            let candidate = randomPointInZone(zone)
+            let tooClose = others.contains { other in
+                // Check against both current position and wander target
+                let dxP = candidate.x - other.position.x
+                let dyP = candidate.y - other.position.y
+                if sqrt(dxP * dxP + dyP * dyP) < minDist { return true }
+                if let target = other.lastDropPosition {
+                    let dxT = candidate.x - target.x
+                    let dyT = candidate.y - target.y
+                    if sqrt(dxT * dxT + dyT * dyT) < minDist { return true }
+                }
+                return false
+            }
+            if !tooClose { return candidate }
+        }
+        // Fallback: just return a random point (zone may be too small to avoid everyone)
+        return randomPointInZone(zone)
+    }
+
     /// Safe inset that never produces a degenerate (negative-size) rect.
     /// Positive dx/dy shrink the rect; negative expand it.
     private static func safeInset(_ rect: CGRect, dx: CGFloat, dy: CGFloat) -> CGRect {
@@ -589,7 +659,7 @@ enum PetAnimationEngine {
         case 3:
             // Insistent: faster approach to spaced target
             let stopDist: CGFloat = 8
-            let speed: CGFloat = 100
+            let speed: CGFloat = 150
             if dist < stopDist {
                 pet.velocity = accelerateToward(
                     current: pet.velocity, desired: .zero, dt: dt
@@ -896,6 +966,8 @@ enum PetAnimationEngine {
         pet.currentFrame = 0
         pet.frameAccumulator = 0
         pet.idleTime = 0  // Reset idle tier on any state change
+        pet.idleAnimationIndex = 0  // Reset idle cycling on state change
+        pet.idleAnimationTimer = PetModel.idleDuration(for: PetModel.idleAnimations[0])
 
         // Reset attention escalation when entering attention-seeking state
         if newState.isAttentionSeeking && !oldState.isAttentionSeeking {
@@ -928,6 +1000,13 @@ enum PetAnimationEngine {
             // Satisfied bounce — the pet got what it wanted!
             triggerSquash(pet, scaleX: 0.88, scaleY: 1.14, duration: 0.15)
             spawnDust(pet)
+
+            // Brief celebration dance before walking back to vibe zone
+            pet.isCelebrating = true
+            pet.celebrationTimeRemaining = 1.2  // ~1.2s of happy dance
+            pet.velocity = .zero  // Stand still while dancing
+            pet.currentFrame = 0
+            pet.frameAccumulator = 0
 
             // Show a brief satisfied speech bubble
             let satisfiedMessages = ["thanks!", "ok!", "on it!", "got it!", "yay!", ":3"]
@@ -970,17 +1049,24 @@ enum PetAnimationEngine {
         _ pets: [PetModel], minGap: CGFloat
     ) {
         guard pets.count > 1 else { return }
+        // Reduced gap when both pets are attention-seeking so collision
+        // doesn't fight their movement toward nearby cursor targets.
+        let attentionGap = minGap * 0.5
         for i in 0..<pets.count {
             for j in (i + 1)..<pets.count {
                 let a = pets[i]
                 let b = pets[j]
                 // Don't push pets that are being dragged
                 if a.isDragging || b.isDragging { continue }
+                // Use a smaller gap when both are chasing the cursor
+                let bothSeeking = a.state.isAttentionSeeking
+                    && b.state.isAttentionSeeking
+                let effectiveGap = bothSeeking ? attentionGap : minGap
                 let dx = b.position.x - a.position.x
                 let dy = b.position.y - a.position.y
                 let dist = sqrt(dx * dx + dy * dy)
-                guard dist < minGap && dist > 0.01 else { continue }
-                let overlap = minGap - dist
+                guard dist < effectiveGap && dist > 0.01 else { continue }
+                let overlap = effectiveGap - dist
                 // Push each pet apart by half the overlap along their axis
                 let nx = dx / dist
                 let ny = dy / dist
@@ -1027,14 +1113,31 @@ enum PetAnimationEngine {
             + spread * (CGFloat(idx) / max(count - 1, 1))
             - spread / 2
 
-        // Offset distance based on attention stage stop distance
-        let stopDist: CGFloat
+        // Offset distance based on attention stage stop distance.
+        // Ensure targets are far enough apart that they don't violate
+        // personalSpace — otherwise collision resolution fights movement.
+        let baseStopDist: CGFloat
         switch pet.attentionStage {
-        case 1: stopDist = 0     // Stage 1 doesn't move
-        case 2: stopDist = 50
-        case 3: stopDist = 30
-        default: stopDist = 20
+        case 1: baseStopDist = 0     // Stage 1 doesn't move
+        case 2: baseStopDist = 50
+        case 3: baseStopDist = 30
+        default: baseStopDist = 20
         }
+
+        // For n pets on a 180° arc, minimum chord between adjacent targets
+        // is 2 * r * sin(halfAngle). Ensure this ≥ personalSpace.
+        let minRequired: CGFloat
+        if count > 1 && baseStopDist > 0 {
+            let halfAngle = spread / (2 * (count - 1))
+            let sinVal = sin(halfAngle)
+            // r needed so that 2*r*sin(halfAngle) >= personalSpace
+            minRequired = sinVal > 0.01
+                ? PetPhysics.personalSpace / (2 * sinVal)
+                : PetPhysics.personalSpace
+        } else {
+            minRequired = 0
+        }
+        let stopDist = max(baseStopDist, minRequired)
 
         return CGPoint(
             x: mouseTarget.x + cos(angle) * stopDist,

@@ -78,6 +78,7 @@
 		PA0000010000000000000001 /* PetAnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = PA0000020000000000000001 /* PetAnimationEngine.swift */; };
 		PG0000010000000000000001 /* PetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PG0000020000000000000001 /* PetManager.swift */; };
 		SS0000010000000000000001 /* SpriteSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SS0000020000000000000001 /* SpriteSheetView.swift */; };
+		SG0000010000000000000001 /* SpriteGridConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = SG0000020000000000000001 /* SpriteGridConfig.swift */; };
 		PWT000010000000000000001 /* PetWaitMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = PWT000020000000000000001 /* PetWaitMain.swift */; };
 		PWT000030000000000000001 /* PipeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = PWT000040000000000000001 /* PipeMonitor.swift */; };
 		PWT000050000000000000001 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000020000000000000001 /* Session.swift */; };
@@ -164,6 +165,7 @@
 		PA0000020000000000000001 /* PetAnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAnimationEngine.swift; sourceTree = "<group>"; };
 		PG0000020000000000000001 /* PetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetManager.swift; sourceTree = "<group>"; };
 		SS0000020000000000000001 /* SpriteSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetView.swift; sourceTree = "<group>"; };
+		SG0000020000000000000001 /* SpriteGridConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteGridConfig.swift; sourceTree = "<group>"; };
 		PWT000020000000000000001 /* PetWaitMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWaitMain.swift; sourceTree = "<group>"; };
 		PWT000040000000000000001 /* PipeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipeMonitor.swift; sourceTree = "<group>"; };
 		PWT00000D000000000000001 /* petwait */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = petwait; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -347,6 +349,7 @@
 				PA0000020000000000000001 /* PetAnimationEngine.swift */,
 				PG0000020000000000000001 /* PetManager.swift */,
 				SS0000020000000000000001 /* SpriteSheetView.swift */,
+				SG0000020000000000000001 /* SpriteGridConfig.swift */,
 			);
 			path = Pets;
 			sourceTree = "<group>";
@@ -526,6 +529,7 @@
 				PA0000010000000000000001 /* PetAnimationEngine.swift in Sources */,
 				PG0000010000000000000001 /* PetManager.swift in Sources */,
 				SS0000010000000000000001 /* SpriteSheetView.swift in Sources */,
+				SG0000010000000000000001 /* SpriteGridConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
