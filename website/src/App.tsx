@@ -206,8 +206,8 @@ function TypingCode() {
 
   return (
     <div className="code-block">
-      {lines.slice(0, visibleLines).map((line, i) => (
-        <div key={i} className={`code-line ${line.color}`}>
+      {lines.map((line, i) => (
+        <div key={i} className={`code-line ${line.color} ${i >= visibleLines ? 'code-line-hidden' : ''}`}>
           <span className="line-number">{i + 1}</span>
           <span className="line-content">
             {'  '.repeat(line.indent)}{line.text}
@@ -216,7 +216,7 @@ function TypingCode() {
         </div>
       ))}
       {visibleLines === 0 && (
-        <div className="code-line normal">
+        <div className="code-line normal" style={{ position: 'absolute' }}>
           <span className="line-number">1</span>
           <span className="line-content"><span className="cursor-blink">|</span></span>
         </div>

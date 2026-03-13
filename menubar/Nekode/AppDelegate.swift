@@ -116,6 +116,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             .sink { [weak self] sessions in
                 let count = sessions.filter { $0.status.needsAttention }.count
                 self?.statusItem.button?.title = count > 0 ? "\(count)" : ""
+                // Swap menubar icon between base and attention variants
+                let iconName = count > 0 ? "MenubarIconAttention" : "MenubarIcon"
+                let image = NSImage(named: iconName)
+                image?.isTemplate = true
+                self?.statusItem.button?.image = image
                 let a11yLabel = count > 0
                     ? "Nekode, \(count) session\(count == 1 ? "" : "s") need attention"
                     : "Nekode, \(sessions.count) session\(sessions.count == 1 ? "" : "s")"

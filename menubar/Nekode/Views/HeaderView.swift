@@ -27,10 +27,10 @@ struct HeaderView: View {
     var body: some View {
         let counts = statusCounts
         let content = HStack {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.amber)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
                 .frame(width: 20, height: 20)
-                .overlay(Text("N").font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
             Text("Nekode").font(.system(size: 14, weight: .semibold))
                 .overlay(alignment: .bottom) {
                     if isCompactMode {

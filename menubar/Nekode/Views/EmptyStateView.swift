@@ -15,14 +15,10 @@ struct EmptyStateView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.amber)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
                 .frame(width: 36, height: 36)
-                .overlay(
-                    Text("N")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .padding(.top, 4)
 
             Text("Monitor your AI coding sessions")

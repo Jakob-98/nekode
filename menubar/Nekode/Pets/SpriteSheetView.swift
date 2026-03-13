@@ -121,10 +121,14 @@ struct SpriteSheetView: View {
     let petSize: CGFloat
 
     var body: some View {
+        // Clamp frame to valid range — currentFrame can be stale from a
+        // previous visualState that had more frames (e.g. running→standing).
+        let maxFrames = max(state.frameCount, 1)
+        let clampedFrame = frame % maxFrames
         if let frameImage = SpriteSheetCache.shared.frame(
             kind: kind,
             row: state.spriteRow,
-            column: state.spriteColumn(for: frame)
+            column: state.spriteColumn(for: clampedFrame)
         ) {
             Image(nsImage: frameImage)
                 .interpolation(.none)     // Pixel-perfect scaling

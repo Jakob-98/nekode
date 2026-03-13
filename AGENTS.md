@@ -6,6 +6,10 @@ Build: `make build` / `make install` / `make run`
 
 Regarding testing: fewer clear tests preferred over many small behavior tests.
 
+COLOR SCHEME:
+https://coolors.co/111417-23282e-5b9279-8fcb9b-e76f51
+#111417, #23282e, #5b9279, #8fcb9b, #e76f51
+
 
 ## WORKLIST
 
@@ -29,3 +33,6 @@ format: - dd-mm-yyyy: S: ONGOING/DONE/[...] -
 - 13-03-2026: S: DONE. Principal engineer review cleanup — double-click bug fix (`PetMouseView` `didDoubleClick` flag), hitbox increased (0.85), vibe zone tuned (200x120 base), magic numbers extracted to `PetPhysics`, velocity==.zero exact equality replaced with threshold checks, `isMoving`/`isAttentionSeeking` merged in `PetState`. `PetView.swift`, `PetAnimationEngine.swift`, `PetModel.swift`, `PetWindow.swift`, `PetManager.swift`, `PetState.swift`
 - 13-03-2026: S: DONE. Dead code removal — `updateRoaming()`, `gatheringTarget()`, `edgeRepulsionHeading()`, `normalizeAngle()` + roam heading properties + 4 dead tests. Consolidated duplicate attention reset blocks in `updateStateTransition`. `PetAnimationEngine.swift`, `PetModel.swift`, `PetTests.swift`
 - 13-03-2026: S: NOT A BUG. Name tag "disappearing when working" — intentional opacity=0 when not hovering and not needsAttention. Text content never cleared.
+- 13-03-2026: S: DONE. Fix sprite glitch — `currentFrame` stale across `visualState` transitions (e.g. running→standing leaves frame 9 for a 3-frame anim, reads empty sheet cell). Clamped frame via modulo in `SpriteSheetView.body`. `SpriteSheetView.swift:127`
+- 13-03-2026: S: DONE. Color scheme update — applied AGENTS.md palette (#111417 #23282e #5b9279 #8fcb9b #e76f51) to Swift app (`Color+Theme.swift`) and website CSS vars (`App.css`). Teal→green accent, warm-brown→cool-dark backgrounds.
+- 13-03-2026: S: DONE. Icon refresh + attention menubar icon — replaced all icons (AppIcon, menubar, website favicon/og/apple-touch, Raycast, tray) with IconKitchen base cat head. Added `MenubarIconAttention.imageset` (cat+hand). Menubar icon swaps between base/attention when any session `needsAttention`. `AppDelegate.swift:119`, `Assets.xcassets/MenubarIconAttention.imageset/`
