@@ -5,25 +5,62 @@ import QuartzCore
 // MARK: - Movement Constants
 
 enum PetPhysics {
-    static let roamSpeed: CGFloat = 70           // pt/s when roaming (2D)
-    static let attentionSpeed: CGFloat = 180     // pt/s when chasing mouse cursor
-    static let idleWalkSpeed: CGFloat = 90       // pt/s when walking to rest spot
-    static let runInSpeed: CGFloat = 140         // pt/s when running in from screen edge
-    static let vibeWanderSpeed: CGFloat = 40     // pt/s gentle wander inside vibe zone
-    static let sleepDriftSpeed: CGFloat = 12     // pt/s very slow sleeping drift
-    static let acceleration: CGFloat = 450       // pt/s² how fast pet reaches max speed
-    static let deceleration: CGFloat = 600       // pt/s² how fast pet stops
-    static let pauseDurationMin: Double = 1      // min pause duration
-    static let pauseDurationMax: Double = 3      // max pause duration
-    static let personalSpace: CGFloat = 60        // min center-to-center distance between pets
-    static let gatheringRadius: CGFloat = 120     // how close idle pets drift toward each other
-    static let edgeMargin: CGFloat = 20          // distance from screen edges
+    // MARK: Movement speeds (pt/s)
+    static let roamSpeed: CGFloat = 70
+    static let attentionSpeed: CGFloat = 180
+    static let idleWalkSpeed: CGFloat = 90
+    static let runInSpeed: CGFloat = 140
+    static let vibeWanderSpeed: CGFloat = 40
+    static let sleepDriftSpeed: CGFloat = 12
+
+    // MARK: Acceleration (pt/s²)
+    static let acceleration: CGFloat = 450
+    static let deceleration: CGFloat = 600
+
+    // MARK: Pauses
+    static let pauseDurationMin: Double = 1
+    static let pauseDurationMax: Double = 3
+
+    // MARK: Spacing
+    static let personalSpace: CGFloat = 60
+    static let softRepulsionRadius: CGFloat = 90
+    static let softRepulsionStrength: CGFloat = 120
+    static let edgeMargin: CGFloat = 20
+
+    // MARK: Lifecycle
     static let appearDuration: Double = 0.4
     static let disappearDuration: Double = 0.3
+
+    // MARK: Thresholds
     /// How close (pts) before pet considers itself "arrived"
     static let arrivalThreshold: CGFloat = 20
     /// How close (pts) before the run-in is considered complete
     static let runInArrivalThreshold: CGFloat = 20
+    /// Speed below which velocity is snapped to zero. Prevents micro-velocities
+    /// from neighbor avoidance keeping the pet in a walking animation ("flying" bug).
+    static let velocitySnapThreshold: CGFloat = 2.0
+
+    // MARK: Hitbox & vibe zone
+    /// Factor of petSize for the clickable sprite hit area.
+    static let hitboxFactor: CGFloat = 0.85
+    /// Vertical downshift of hitbox (factor of petSize) to align with sprite feet.
+    static let hitboxDownShift: CGFloat = 0.04
+    /// Base vibe zone size for 1-2 pets.
+    static let vibeZoneBaseWidth: CGFloat = 200
+    static let vibeZoneBaseHeight: CGFloat = 120
+    /// Extra vibe zone space per pet beyond 2.
+    static let vibeZoneExtraWidth: CGFloat = 60
+    static let vibeZoneExtraHeight: CGFloat = 30
+
+    // MARK: Sleep
+    /// Duration of the brief "wake" animation when a sleeping pet is dragged.
+    static let sleepWakeDuration: Double = 1.2
+
+    // MARK: Collision
+    /// Fraction of overlap corrected per tick in collision resolution.
+    /// Lower = gentler (soft repulsion handles the rest).
+    static let collisionCorrectionFraction: CGFloat = 0.3
+
     /// Sensible fallback screen rect when NSScreen.main is nil
     static let fallbackScreen = NSRect(x: 0, y: 0, width: 1440, height: 900)
 }
@@ -67,8 +104,26 @@ enum PetAnimationEngine {
             return
         }
 
-        // Don't move while dragging — pet stays where user is holding it
-        guard !pet.isDragging else { return }
+        // Don't move while dragging — pet stays where user is holding it.
+        // Exception: tick the wake animation so the sprite visibly stirs.
+        if pet.isDragging {
+            if pet.sleepWakeTimeRemaining > 0 {
+                pet.sleepWakeTimeRemaining -= dt
+                stepAnimation(pet, dt: dt)
+                pet.breathAccumulator += dt
+            }
+            return
+        }
+
+        // Tick sleep-wake timer (counts down after drop too)
+        if pet.sleepWakeTimeRemaining > 0 {
+            pet.sleepWakeTimeRemaining -= dt
+            if pet.sleepWakeTimeRemaining <= 0 {
+                pet.sleepWakeTimeRemaining = 0
+                pet.currentFrame = 0
+                pet.frameAccumulator = 0
+            }
+        }
 
         // Tick celebration dance timer
         if pet.isCelebrating {
@@ -121,13 +176,24 @@ enum PetAnimationEngine {
             updateIdleResting(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone, allPets: allPets)
         case .sleeping:
             // Sleeping pets still gently wander within the vibe zone
-            updateSleepingWander(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone)
+            updateSleepingWander(pet, dt: dt, screenBounds: screenBounds, vibeZone: vibeZone, allPets: allPets)
+            // Random sparse blink: briefly hold on frame 0 (eyes open)
+            updateSleepBlink(pet, dt: dt)
         default:
             // spinning, walking, running, appearing, disappearing — stationary
             pet.velocity = .zero
         }
 
-        // Apply 2D velocity
+        // Apply 2D velocity — with soft neighbor avoidance blended in
+        applyNeighborAvoidance(pet, dt: dt, allPets: allPets)
+
+        // Snap micro-velocities to zero so residual avoidance forces don't
+        // keep the pet stuck in a walking animation (the "flying" bug).
+        let speed = sqrt(pet.velocity.x * pet.velocity.x + pet.velocity.y * pet.velocity.y)
+        if speed > 0 && speed < PetPhysics.velocitySnapThreshold {
+            pet.velocity = .zero
+        }
+
         pet.position.x += pet.velocity.x * CGFloat(dt)
         pet.position.y += pet.velocity.y * CGFloat(dt)
 
@@ -140,7 +206,7 @@ enum PetAnimationEngine {
             // Cycle idle animation when sitting and stationary.
             // facingRight is NOT touched here — the pet keeps facing
             // whichever direction it was last walking.
-            if pet.velocity == .zero {
+            if speed < PetPhysics.velocitySnapThreshold {
                 pet.idleAnimationTimer -= dt
                 if pet.idleAnimationTimer <= 0 {
                     let oldIndex = pet.idleAnimationIndex
@@ -262,124 +328,6 @@ enum PetAnimationEngine {
         pet.facingRight = dx > 0
     }
 
-    // MARK: - Roaming (smooth wander with steering behavior)
-
-    static func updateRoaming(
-        _ pet: PetModel, dt: TimeInterval, screenBounds: CGRect,
-        allPets: [PetModel] = []
-    ) {
-        let now = CACurrentMediaTime()
-
-        // Check if we should pause (standing still)
-        if pet.roamPauseUntil > now {
-            let decel = accelerateToward(
-                current: pet.velocity, desired: .zero, dt: dt
-            )
-            pet.velocity = decel
-            return
-        }
-
-        // Pick a new desired heading periodically (every 3-8s)
-        if now >= pet.roamNextDirectionChange {
-            // Priority: gathering bias > edge repulsion > random
-            if let gatherPt = gatheringTarget(
-                for: pet, allPets: allPets
-            ) {
-                // Steer toward the group centroid
-                let gdx = gatherPt.x - pet.position.x
-                let gdy = gatherPt.y - pet.position.y
-                pet.roamDesiredHeading = atan2(gdy, gdx)
-            } else if let bias = edgeRepulsionHeading(
-                pet.position, screenBounds: screenBounds
-            ) {
-                // Strong nudge toward screen center
-                pet.roamDesiredHeading = bias
-            } else {
-                // Random desired heading
-                pet.roamDesiredHeading = CGFloat.random(
-                    in: 0...(2 * .pi)
-                )
-            }
-            pet.roamNextDirectionChange = now + Double.random(in: 3...8)
-
-            // Occasionally schedule a pause (15% chance per direction change)
-            if Double.random(in: 0...1) < 0.15 {
-                let pauseLen = Double.random(
-                    in: PetPhysics.pauseDurationMin...PetPhysics.pauseDurationMax
-                )
-                pet.roamPauseUntil = now + pauseLen
-            }
-        }
-
-        // Smoothly steer current heading toward desired heading
-        let turnSpeed: CGFloat = 2.0  // radians/s
-        let maxTurn = turnSpeed * CGFloat(dt)
-        let angleDiff = normalizeAngle(
-            pet.roamDesiredHeading - pet.roamHeading
-        )
-        if abs(angleDiff) <= maxTurn {
-            pet.roamHeading = pet.roamDesiredHeading
-        } else {
-            pet.roamHeading += angleDiff > 0 ? maxTurn : -maxTurn
-        }
-        // Keep heading in [0, 2π)
-        pet.roamHeading = normalizeAngle(pet.roamHeading)
-        if pet.roamHeading < 0 {
-            pet.roamHeading += 2 * .pi
-        }
-
-        // Desired velocity along current heading
-        let desiredVel = CGPoint(
-            x: cos(pet.roamHeading) * PetPhysics.roamSpeed,
-            y: sin(pet.roamHeading) * PetPhysics.roamSpeed
-        )
-
-        // Accelerate smoothly toward desired velocity
-        pet.velocity = accelerateToward(
-            current: pet.velocity, desired: desiredVel, dt: dt
-        )
-
-        // Update facing direction with squash on direction change
-        let newFacing = pet.velocity.x >= 0
-        if newFacing != pet.facingRight {
-            triggerSquash(pet, scaleX: 1.05, scaleY: 0.95, duration: 0.06)
-        }
-        pet.facingRight = newFacing
-    }
-
-    /// Returns a heading angle pointing away from nearby screen edges,
-    /// or nil if the pet is safely in the interior.
-    private static func edgeRepulsionHeading(
-        _ pos: CGPoint, screenBounds: CGRect
-    ) -> CGFloat? {
-        let margin: CGFloat = 80  // Start repelling within this distance
-        let minX = screenBounds.minX + PetPhysics.edgeMargin
-        let maxX = screenBounds.maxX - PetPhysics.edgeMargin
-        let minY = screenBounds.minY + PetPhysics.edgeMargin
-        let maxY = screenBounds.maxY - PetPhysics.edgeMargin
-
-        // Accumulate a repulsion vector from nearby edges
-        var rx: CGFloat = 0
-        var ry: CGFloat = 0
-
-        if pos.x - minX < margin { rx += margin - (pos.x - minX) }
-        if maxX - pos.x < margin { rx -= margin - (maxX - pos.x) }
-        if pos.y - minY < margin { ry += margin - (pos.y - minY) }
-        if maxY - pos.y < margin { ry -= margin - (maxY - pos.y) }
-
-        let mag = sqrt(rx * rx + ry * ry)
-        guard mag > 1 else { return nil }
-        return atan2(ry, rx)
-    }
-
-    /// Normalize an angle to [-π, π].
-    private static func normalizeAngle(_ angle: CGFloat) -> CGFloat {
-        var a = angle.truncatingRemainder(dividingBy: 2 * .pi)
-        if a > .pi { a -= 2 * .pi }
-        if a < -.pi { a += 2 * .pi }
-        return a
-    }
-
     // MARK: - Idle Resting (sitting/working — wanders gently in vibe zone)
 
     static func updateIdleResting(
@@ -415,9 +363,21 @@ enum PetAnimationEngine {
             let dy = home.y - pet.position.y
             let dist = sqrt(dx * dx + dy * dy)
 
-            if dist < PetPhysics.arrivalThreshold {
-                // Arrived — settle, then after a pause pick a new wander target
-                if pet.velocity != .zero {
+            // Use a larger threshold for "close enough" when the pet is already
+            // stationary — this prevents collision pushes from immediately
+            // triggering a walk-back (the left/right oscillation bug).
+            // A pet that's sitting still tolerates being up to personalSpace
+            // away from its target; a pet that's actively walking uses the
+            // normal tight threshold.
+            let currentSpeed = sqrt(pet.velocity.x * pet.velocity.x + pet.velocity.y * pet.velocity.y)
+            let isStationary = currentSpeed < PetPhysics.velocitySnapThreshold
+            let effectiveThreshold = isStationary
+                ? PetPhysics.personalSpace
+                : PetPhysics.arrivalThreshold
+
+            if dist < effectiveThreshold {
+                // Arrived or close enough — settle
+                if !isStationary {
                     triggerSquash(pet, scaleX: 1.08, scaleY: 0.92, duration: 0.12)
                     spawnDust(pet)
                     pet.velocity = .zero
@@ -428,13 +388,35 @@ enum PetAnimationEngine {
                     pet.roamPauseUntil = now + Double.random(in: 3...10)
                 }
 
+                // If collision pushed us away, accept the new position as home
+                // so we don't walk back into the neighbor. Only snap when
+                // stationary and drift is within personalSpace.
+                if isStationary && dist > PetPhysics.arrivalThreshold {
+                    pet.lastDropPosition = pet.position
+                }
+
                 // After the pause, pick a new random spot in the vibe zone
                 // (idleTime continues accumulating — no reset here)
-                if now >= pet.roamPauseUntil && pet.velocity == .zero {
+                if now >= pet.roamPauseUntil && isStationary {
                     pet.lastDropPosition = randomPointInZoneAvoiding(zone, pet: pet, allPets: allPets)
                 }
             } else {
-                // Walk toward current target
+                // Walk toward current target — but first check if the target
+                // is too close to a neighbor; if so, pick a new one to avoid
+                // walking straight into another pet.
+                let tooCloseToNeighbor = allPets.contains { other in
+                    guard other.id != pet.id, !other.isDragging else { return false }
+                    let ndx = home.x - other.position.x
+                    let ndy = home.y - other.position.y
+                    return sqrt(ndx * ndx + ndy * ndy) < PetPhysics.personalSpace * 0.7
+                }
+                if tooCloseToNeighbor {
+                    pet.lastDropPosition = randomPointInZoneAvoiding(zone, pet: pet, allPets: allPets)
+                    // Don't start walking yet — will re-evaluate next tick
+                    pet.velocity = .zero
+                    return
+                }
+
                 let desiredVel = velocityToward(
                     from: pet.position, to: home,
                     speed: PetPhysics.vibeWanderSpeed
@@ -464,7 +446,8 @@ enum PetAnimationEngine {
         let dist = sqrt(dx * dx + dy * dy)
 
         if dist < PetPhysics.arrivalThreshold {
-            if pet.velocity != .zero {
+            let currentSpeed = sqrt(pet.velocity.x * pet.velocity.x + pet.velocity.y * pet.velocity.y)
+            if currentSpeed >= PetPhysics.velocitySnapThreshold {
                 triggerSquash(pet, scaleX: 1.08, scaleY: 0.92, duration: 0.12)
                 spawnDust(pet)
             }
@@ -483,12 +466,49 @@ enum PetAnimationEngine {
 
     // MARK: - Sleeping Wander (gentle drift within vibe zone)
 
+    /// Randomly trigger a brief blink during sleep: hold on frame 0 (row 3)
+    /// which looks like the cat briefly opening its eyes. Fires sparingly
+    /// every ~15-30s and lasts about 0.4-0.6s.
+    static func updateSleepBlink(_ pet: PetModel, dt: TimeInterval) {
+        let now = CACurrentMediaTime()
+
+        if pet.sleepBlinking {
+            pet.sleepBlinkTimeRemaining -= dt
+            if pet.sleepBlinkTimeRemaining <= 0 {
+                pet.sleepBlinking = false
+                // Let the normal animation resume from wherever it was
+            } else {
+                // Pin to frame 0 while blinking
+                pet.currentFrame = 0
+                pet.frameAccumulator = 0
+            }
+            return
+        }
+
+        // Only blink while stationary (not drifting) and not waking
+        let blinkSpeed = sqrt(pet.velocity.x * pet.velocity.x + pet.velocity.y * pet.velocity.y)
+        guard blinkSpeed < PetPhysics.velocitySnapThreshold, pet.sleepWakeTimeRemaining <= 0 else { return }
+
+        // Schedule first blink
+        if pet.sleepBlinkNext == 0 {
+            pet.sleepBlinkNext = now + Double.random(in: 15...30)
+        }
+
+        if now >= pet.sleepBlinkNext {
+            pet.sleepBlinking = true
+            pet.sleepBlinkTimeRemaining = Double.random(in: 0.4...0.6)
+            pet.currentFrame = 0
+            pet.frameAccumulator = 0
+            pet.sleepBlinkNext = now + Double.random(in: 15...30)
+        }
+    }
+
     /// Sleeping pets drift very slowly to a nearby point, then pause for
     /// 30-60s, then pick a new target. Uses `sleepDriftTarget` and
     /// `sleepDrifting` to avoid clobbering `lastDropPosition` (the pet's home).
     static func updateSleepingWander(
         _ pet: PetModel, dt: TimeInterval, screenBounds: CGRect,
-        vibeZone: CGRect? = nil
+        vibeZone: CGRect? = nil, allPets: [PetModel] = []
     ) {
         // Sleeping pets don't move if they have a custom home
         guard !pet.hasCustomHome else {
@@ -512,8 +532,8 @@ enum PetAnimationEngine {
         if !pet.sleepDrifting {
             pet.velocity = .zero
             if now >= pet.roamPauseUntil {
-                // Time to drift — pick a nearby point in the vibe zone
-                pet.sleepDriftTarget = randomPointInZone(zone)
+                // Time to drift — pick a nearby point avoiding other pets
+                pet.sleepDriftTarget = randomPointInZoneAvoiding(zone, pet: pet, allPets: allPets)
                 pet.sleepDrifting = true
             }
             return
@@ -746,6 +766,11 @@ enum PetAnimationEngine {
     }
 
     private static func bubbleText(for pet: PetModel) -> String? {
+        // 1-in-20 chance: playful license nudge for unlicensed users
+        if !LicenseManager.shared.status.isLicensed && Int.random(in: 0..<20) == 0 {
+            return licenseNudge()
+        }
+
         switch pet.state {
         case .sitting:
             // Tier-aware idle messages
@@ -800,6 +825,20 @@ enum PetAnimationEngine {
         default:
             return nil
         }
+    }
+
+    /// Playful purchase reminder messages shown by pets (1-in-20 chance).
+    private static func licenseNudge() -> String {
+        [
+            "buy me a license?",
+            "I want a home...",
+            "support my dev?",
+            "adopt me! $9.99",
+            "pls license me",
+            "I work for free!",
+            "treat your dev?",
+            "license = love",
+        ].randomElement()!
     }
 
     /// Short bubble text from the session's current tool activity.
@@ -969,19 +1008,16 @@ enum PetAnimationEngine {
         pet.idleAnimationIndex = 0  // Reset idle cycling on state change
         pet.idleAnimationTimer = PetModel.idleDuration(for: PetModel.idleAnimations[0])
 
-        // Reset attention escalation when entering attention-seeking state
+        // Clear sleep-related transient state on any state change
+        pet.sleepWakeTimeRemaining = 0
+        pet.sleepBlinking = false
+        pet.sleepBlinkTimeRemaining = 0
+        pet.sleepBlinkNext = 0
+
+        // Reset attention escalation and save home when entering attention-seeking state
         if newState.isAttentionSeeking && !oldState.isAttentionSeeking {
             pet.attentionTime = 0
             pet.attentionBounceNext = 0
-        }
-
-        // Reset attention time when leaving attention-seeking state
-        if !newState.isAttentionSeeking && oldState.isAttentionSeeking {
-            pet.attentionTime = 0
-        }
-
-        // Save home position when entering attention-seeking state
-        if newState.isAttentionSeeking && !oldState.isAttentionSeeking {
             pet.preChaseHome = pet.lastDropPosition
         }
 
@@ -991,6 +1027,8 @@ enum PetAnimationEngine {
         // the user had previously dragged it elsewhere. The pet is "satisfied" and
         // goes back to hang out with its friends.
         if oldState.isAttentionSeeking && !newState.isAttentionSeeking {
+            pet.attentionTime = 0
+
             if let savedHome = pet.preChaseHome {
                 pet.lastDropPosition = savedHome
                 pet.preChaseHome = nil
@@ -1024,7 +1062,6 @@ enum PetAnimationEngine {
         // Reset roaming when entering a moving state
         if newState.isMoving && !oldState.isMoving {
             pet.roamPauseUntil = 0
-            pet.roamNextDirectionChange = 0  // Pick new heading immediately
             pet.velocity = .zero // Will be recalculated on next tick
         }
     }
@@ -1040,11 +1077,59 @@ enum PetAnimationEngine {
         pet.position.y = max(minY, min(maxY, pet.position.y))
     }
 
+    // MARK: - Multi-Pet: Soft Neighbor Avoidance (velocity-based)
+
+    /// Applies a gentle steering force to the pet's velocity to avoid neighbors.
+    /// Unlike collision resolution (which pushes positions after the fact),
+    /// this blends smoothly into the pet's movement so there's no oscillation.
+    /// The force is strongest at `personalSpace` and fades to zero at
+    /// `softRepulsionRadius`.
+    private static func applyNeighborAvoidance(
+        _ pet: PetModel, dt: TimeInterval, allPets: [PetModel]
+    ) {
+        guard allPets.count > 1 else { return }
+        // Don't apply avoidance to pets that are being dragged or running in
+        guard !pet.isDragging, !pet.isRunningIn else { return }
+        // Attention-seeking pets already have arc-based spacing
+        guard !pet.state.isAttentionSeeking else { return }
+
+        var avoidX: CGFloat = 0
+        var avoidY: CGFloat = 0
+        let radius = PetPhysics.softRepulsionRadius
+
+        for other in allPets {
+            guard other.id != pet.id, !other.isDragging else { continue }
+            let dx = pet.position.x - other.position.x
+            let dy = pet.position.y - other.position.y
+            let dist = sqrt(dx * dx + dy * dy)
+            guard dist < radius, dist > 0.01 else { continue }
+
+            // Force is inversely proportional to distance:
+            // At dist=0 → full strength, at dist=radius → zero
+            let t = 1.0 - (dist / radius)  // 0..1
+            let force = PetPhysics.softRepulsionStrength * t * t // quadratic falloff
+            let nx = dx / dist
+            let ny = dy / dist
+            avoidX += nx * force
+            avoidY += ny * force
+        }
+
+        // Apply avoidance as a velocity offset (scaled by dt for smooth integration)
+        let maxAvoid = PetPhysics.softRepulsionStrength * CGFloat(dt)
+        let avoidMag = sqrt(avoidX * avoidX + avoidY * avoidY)
+        if avoidMag > 0.1 {
+            let scale = min(maxAvoid, avoidMag * CGFloat(dt)) / max(avoidMag, 0.01)
+            pet.velocity.x += avoidX * scale
+            pet.velocity.y += avoidY * scale
+        }
+    }
+
     // MARK: - Multi-Pet: Collision Resolution (2D Personal Space)
 
-    /// Push overlapping pets apart in 2D. Each pair of pets maintains
-    /// `personalSpace` distance between their centers. O(n²) pairwise —
-    /// fine for the expected 3-5 pets.
+    /// Push overlapping pets apart in 2D. Acts as a safety net behind the
+    /// soft velocity-based avoidance. Only corrects a fraction of the overlap
+    /// each tick to avoid fighting the velocity system (which causes glitching).
+    /// O(n²) pairwise — fine for the expected 3-5 pets.
     static func resolveCollisions(
         _ pets: [PetModel], minGap: CGFloat
     ) {
@@ -1052,6 +1137,10 @@ enum PetAnimationEngine {
         // Reduced gap when both pets are attention-seeking so collision
         // doesn't fight their movement toward nearby cursor targets.
         let attentionGap = minGap * 0.5
+        // Only correct a fraction of the overlap per tick — the soft
+        // repulsion handles the rest. This prevents the oscillation where
+        // position push and velocity pull fight each other.
+        let correctionFraction = PetPhysics.collisionCorrectionFraction
         for i in 0..<pets.count {
             for j in (i + 1)..<pets.count {
                 let a = pets[i]
@@ -1067,13 +1156,14 @@ enum PetAnimationEngine {
                 let dist = sqrt(dx * dx + dy * dy)
                 guard dist < effectiveGap && dist > 0.01 else { continue }
                 let overlap = effectiveGap - dist
-                // Push each pet apart by half the overlap along their axis
+                // Push each pet apart by a fraction of the overlap
                 let nx = dx / dist
                 let ny = dy / dist
-                a.position.x -= nx * overlap / 2
-                a.position.y -= ny * overlap / 2
-                b.position.x += nx * overlap / 2
-                b.position.y += ny * overlap / 2
+                let push = overlap * correctionFraction / 2
+                a.position.x -= nx * push
+                a.position.y -= ny * push
+                b.position.x += nx * push
+                b.position.y += ny * push
             }
         }
     }
@@ -1143,41 +1233,6 @@ enum PetAnimationEngine {
             x: mouseTarget.x + cos(angle) * stopDist,
             y: mouseTarget.y + sin(angle) * stopDist
         )
-    }
-
-    // MARK: - Multi-Pet: Gathering Bias
-
-    /// Computes a gentle bias point that draws roaming pets toward each
-    /// other. Returns the centroid of all non-roaming (sitting) pets, or
-    /// nil if there are fewer than 2 sitting pets to gather around.
-    static func gatheringTarget(
-        for pet: PetModel, allPets: [PetModel]
-    ) -> CGPoint? {
-        let sitters = allPets.filter {
-            $0.id != pet.id
-                && $0.state == .sitting
-                && $0.velocity == .zero
-                && !$0.isDragging
-        }
-        guard !sitters.isEmpty else { return nil }
-
-        // Centroid of sitting pets
-        var cx: CGFloat = 0
-        var cy: CGFloat = 0
-        for s in sitters {
-            cx += s.position.x
-            cy += s.position.y
-        }
-        cx /= CGFloat(sitters.count)
-        cy /= CGFloat(sitters.count)
-
-        // Only bias if we're beyond gathering radius
-        let dx = cx - pet.position.x
-        let dy = cy - pet.position.y
-        let dist = sqrt(dx * dx + dy * dy)
-        guard dist > PetPhysics.gatheringRadius else { return nil }
-
-        return CGPoint(x: cx, y: cy)
     }
 
     // MARK: - Helpers

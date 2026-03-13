@@ -4,11 +4,14 @@ struct EmptyStateView: View {
     @ObservedObject var pluginManager: PluginManager
     @State private var copiedIndex: Int?
     @State private var justInstalled = false
+    @State private var copilotJustInstalled = false
 
     private static let ccMarketplace = "claude plugin marketplace add jakobserlier/catassistant"
     private static let ccInstall = "claude plugin install catassistant"
 
-    private var anyInstalled: Bool { pluginManager.ccInstalled || pluginManager.ocInstalled }
+    private var anyInstalled: Bool {
+        pluginManager.ccInstalled || pluginManager.ocInstalled || pluginManager.copilotInstalled
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -43,6 +46,9 @@ struct EmptyStateView: View {
             pluginStatusRow("Claude Code", installed: pluginManager.ccInstalled)
             if pluginManager.ocConfigExists {
                 ocPluginRow
+            }
+            if pluginManager.vscodeExists {
+                copilotPluginRow
             }
 
             Text("Start a session \u{2014} it will appear here automatically.")
@@ -110,6 +116,45 @@ struct EmptyStateView: View {
         }
     }
 
+    private var copilotPluginRow: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                pluginStatusRow("VS Code Copilot", installed: pluginManager.copilotInstalled)
+                if !pluginManager.copilotInstalled && !copilotJustInstalled {
+                    Button {
+                        if pluginManager.installCopilotHooks() {
+                            copilotJustInstalled = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                copilotJustInstalled = false
+                            }
+                        }
+                    } label: {
+                        Text("Connect")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color.segmentActiveText)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.amber)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if copilotJustInstalled {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.green)
+                    Text("Connected \u{2014} restart VS Code to activate")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.textMuted)
+                    Spacer()
+                }
+                .transition(.opacity)
+            }
+        }
+    }
+
     private var notInstalledView: some View {
         VStack(spacing: 12) {
             VStack(spacing: 6) {
@@ -122,6 +167,13 @@ struct EmptyStateView: View {
                 VStack(spacing: 6) {
                     sectionHeader("opencode")
                     ocPluginRow
+                }
+            }
+
+            if pluginManager.vscodeExists {
+                VStack(spacing: 6) {
+                    sectionHeader("VS Code Copilot")
+                    copilotPluginRow
                 }
             }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-struct HookInput: Codable {
+struct HookInput: Decodable {
     let sessionId: String
     let cwd: String
     var transcriptPath: String?
@@ -14,38 +14,74 @@ struct HookInput: Codable {
     var title: String?
     var trigger: String?
 
-    enum CodingKeys: String, CodingKey {
-        case sessionId = "session_id"
-        case cwd
-        case transcriptPath = "transcript_path"
-        case permissionMode = "permission_mode"
-        case hookEventName = "hook_event_name"
-        case prompt
-        case toolName = "tool_name"
-        case toolInput = "tool_input"
-        case notificationType = "notification_type"
-        case message, title, trigger
+    // Flexible CodingKey that matches any string — used to support both
+    // snake_case (Claude Code) and camelCase (VS Code Copilot) JSON keys.
+    private struct FlexKey: CodingKey {
+        var stringValue: String
+        var intValue: Int?
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { self.intValue = intValue; self.stringValue = "\(intValue)" }
+    }
+
+    /// Try to decode a value using the first matching key from a list of alternatives.
+    private static func decodeFirst<T: Decodable>(
+        _ type: T.Type,
+        from container: KeyedDecodingContainer<FlexKey>,
+        keys: [String]
+    ) throws -> T {
+        for key in keys {
+            if let flexKey = FlexKey(stringValue: key),
+               let value = try? container.decode(T.self, forKey: flexKey) {
+                return value
+            }
+        }
+        // Fall through: throw a proper error using the first key
+        let flexKey = FlexKey(stringValue: keys[0])!
+        return try container.decode(T.self, forKey: flexKey)
+    }
+
+    /// Try to optionally decode a value using the first matching key from a list of alternatives.
+    private static func decodeFirstIfPresent<T: Decodable>(
+        _ type: T.Type,
+        from container: KeyedDecodingContainer<FlexKey>,
+        keys: [String]
+    ) -> T? {
+        for key in keys {
+            if let flexKey = FlexKey(stringValue: key),
+               let value = try? container.decode(T.self, forKey: flexKey) {
+                return value
+            }
+        }
+        return nil
     }
 
     init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        cwd = try container.decode(String.self, forKey: .cwd)
-        transcriptPath = try container.decodeIfPresent(String.self, forKey: .transcriptPath)
-        permissionMode = try container.decodeIfPresent(String.self, forKey: .permissionMode)
-        hookEventName = try container.decode(String.self, forKey: .hookEventName)
-        prompt = try container.decodeIfPresent(String.self, forKey: .prompt)
-        toolName = try container.decodeIfPresent(String.self, forKey: .toolName)
-        notificationType = try container.decodeIfPresent(String.self, forKey: .notificationType)
-        message = try container.decodeIfPresent(String.self, forKey: .message)
-        title = try container.decodeIfPresent(String.self, forKey: .title)
-        trigger = try container.decodeIfPresent(String.self, forKey: .trigger)
+        let container = try decoder.container(keyedBy: FlexKey.self)
 
-        if container.contains(.toolInput) {
-            let rawDict = try? container.decode([String: ToolInputValue].self, forKey: .toolInput)
-            toolInput = rawDict?.compactMapValues { $0.stringValue }
-        } else {
-            toolInput = nil
+        // Required fields — try camelCase first, then snake_case
+        sessionId = try Self.decodeFirst(String.self, from: container, keys: ["sessionId", "session_id"])
+        cwd = try Self.decodeFirst(String.self, from: container, keys: ["cwd"])
+        hookEventName = try Self.decodeFirst(String.self, from: container, keys: ["hookEventName", "hook_event_name"])
+
+        // Optional fields — try camelCase first, then snake_case
+        transcriptPath = Self.decodeFirstIfPresent(String.self, from: container, keys: ["transcriptPath", "transcript_path"])
+        permissionMode = Self.decodeFirstIfPresent(String.self, from: container, keys: ["permissionMode", "permission_mode"])
+        prompt = Self.decodeFirstIfPresent(String.self, from: container, keys: ["prompt"])
+        toolName = Self.decodeFirstIfPresent(String.self, from: container, keys: ["toolName", "tool_name"])
+        notificationType = Self.decodeFirstIfPresent(String.self, from: container, keys: ["notificationType", "notification_type"])
+        message = Self.decodeFirstIfPresent(String.self, from: container, keys: ["message"])
+        title = Self.decodeFirstIfPresent(String.self, from: container, keys: ["title"])
+        trigger = Self.decodeFirstIfPresent(String.self, from: container, keys: ["trigger"])
+
+        // toolInput needs special handling for mixed-type values
+        let toolInputKeys = ["toolInput", "tool_input"]
+        toolInput = nil
+        for key in toolInputKeys {
+            if let flexKey = FlexKey(stringValue: key),
+               let rawDict = try? container.decode([String: ToolInputValue].self, forKey: flexKey) {
+                toolInput = rawDict.compactMapValues { $0.stringValue }
+                break
+            }
         }
     }
 }

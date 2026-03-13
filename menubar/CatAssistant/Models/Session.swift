@@ -91,6 +91,7 @@ struct Session: Codable, Identifiable {
 
     var sourceLabel: String {
         switch source {
+        case "copilot": return "CP"
         case "opencode": return "OC"
         case "cli": return "CLI"
         default: return "CC"
@@ -293,6 +294,11 @@ struct Session: Codable, Identifiable {
         return startTime(from: info)
     }
 
+    /// Copilot sessions track a VS Code helper PID that may outlive the
+    /// actual coding session (e.g. user closes a window but VS Code stays
+    /// running). We consider them stale after 5 minutes of inactivity.
+    private static let copilotInactivityTimeout: TimeInterval = 300
+
     var isAlive: Bool {
         guard let pid else { return false }
         guard kill(Int32(pid), 0) == 0 || errno == EPERM else { return false }
@@ -309,6 +315,14 @@ struct Session: Codable, Identifiable {
         // Orphan check: if parent is launchd (PPID=1), the terminal/IDE that
         // spawned this session has died. The process is alive but unreachable.
         if info.kp_eproc.e_ppid == 1 {
+            return false
+        }
+
+        // Copilot inactivity check: the tracked PID is a VS Code helper process
+        // that may stay alive long after the user stops interacting with Copilot.
+        // If no hook activity for 5 minutes, consider the session stale.
+        if source == "copilot",
+           -lastActivity.timeIntervalSinceNow > Self.copilotInactivityTimeout {
             return false
         }
 

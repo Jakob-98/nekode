@@ -65,6 +65,18 @@ class PetModel: ObservableObject, Identifiable {
     /// Whether the sleeping pet is currently drifting (vs pausing).
     var sleepDrifting: Bool = false
 
+    // MARK: - Sleep Wake / Blink
+
+    /// Seconds remaining in the brief "wake" animation when a sleeping pet is dragged.
+    /// While > 0, `visualState` returns `.walking` (row 5) instead of `.sleeping`.
+    var sleepWakeTimeRemaining: Double = 0
+    /// When true, the sleeping sprite holds on frame 0 (row 3) for a brief blink.
+    var sleepBlinking: Bool = false
+    /// Seconds remaining for the blink hold.
+    var sleepBlinkTimeRemaining: Double = 0
+    /// Monotonic time for the next possible blink.
+    var sleepBlinkNext: Double = 0
+
     // MARK: - Attention Escalation
 
     /// How long (seconds) the pet has been in an attention-seeking state.
@@ -81,15 +93,6 @@ class PetModel: ObservableObject, Identifiable {
 
     /// Monotonic time for the next bounce squash in stage 4.
     var attentionBounceNext: Double = 0
-
-    // MARK: - Roaming (Smooth Wander)
-
-    /// Current movement heading in radians (0 = right, π/2 = up).
-    var roamHeading: CGFloat = CGFloat.random(in: 0...(2 * .pi))
-    /// Desired heading to steer toward (resampled periodically).
-    var roamDesiredHeading: CGFloat = CGFloat.random(in: 0...(2 * .pi))
-    /// Monotonic time when the next random direction change occurs.
-    var roamNextDirectionChange: Double = 0
 
     // MARK: - Zzz Particles
 
@@ -229,15 +232,24 @@ class PetModel: ObservableObject, Identifiable {
             }
         }
         // Sitting pet that's moving → walking animation
-        if state == .sitting && velocity != .zero {
+        // Use a magnitude threshold to ignore micro-velocities from neighbor
+        // avoidance — without this, tiny residual velocities lock the pet into
+        // the walking sprite (1.0 scale) instead of the idle sprite (0.85),
+        // making it look like it's floating/flying.
+        let speed = sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+        if state == .sitting && speed > PetPhysics.velocitySnapThreshold {
+            return .walking
+        }
+        // Sleeping pet briefly waking (dragged) → walking animation (row 5)
+        if state == .sleeping && sleepWakeTimeRemaining > 0 {
             return .walking
         }
         // Sleeping pet that's drifting → sneaking animation (low crawl)
-        if state == .sleeping && velocity != .zero {
+        if state == .sleeping && speed > PetPhysics.velocitySnapThreshold {
             return .sneaking
         }
         // Sitting pet that's stationary → cycle through idle animations
-        if state == .sitting && velocity == .zero {
+        if state == .sitting && speed <= PetPhysics.velocitySnapThreshold {
             let idleAnim = PetModel.idleAnimations[idleAnimationIndex % PetModel.idleAnimations.count]
             return idleAnim
         }

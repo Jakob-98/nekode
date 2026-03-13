@@ -9,6 +9,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var panel: FloatingPanel!
     private var sessionManager: SessionManager!
     private var updater: UpdaterBase!
+    private var licenseManager: LicenseManager!
     private var pluginManager: PluginManager!
     private var historyManager: HistoryManager!
     private var refocusController = RefocusController()
@@ -28,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         historyManager = HistoryManager()
         sessionManager = SessionManager(historyManager: historyManager)
         updater = makeUpdater()
+        licenseManager = LicenseManager.shared
         pluginManager = PluginManager()
 
         setupStatusItem()
@@ -36,6 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             sessionManager: sessionManager,
             historyManager: historyManager,
             updater: updater,
+            licenseManager: licenseManager,
             pluginManager: pluginManager,
             refocus: refocusController,
             compactController: compactController
@@ -58,6 +61,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         registerShortcuts()
         observeSessionUpdates()
         setupPetManager()
+
+        // Re-validate license in background (cached, works offline)
+        Task { await licenseManager.revalidateIfNeeded() }
     }
 
     @MainActor private func registerShortcuts() {

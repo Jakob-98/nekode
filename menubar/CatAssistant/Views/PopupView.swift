@@ -21,6 +21,7 @@ struct PopupView: View {
     let sessions: [Session]
     var recentProjects: [RecentProject] = []
     @ObservedObject var updater: UpdaterBase
+    @ObservedObject var licenseManager: LicenseManager
     var pluginManager: PluginManager?
     var refocus: RefocusController?
     var initialTab: PopupTab = .active
@@ -66,6 +67,7 @@ struct PopupView: View {
                             case .settings:
                                 SettingsSection(
                                     updater: updater,
+                                    licenseManager: licenseManager,
                                     pluginManager: pluginManager ?? PluginManager()
                                 )
                             case .about:
@@ -77,6 +79,7 @@ struct PopupView: View {
                 .clipped()
                 .animation(.easeInOut(duration: overlayAnimationDuration), value: activeOverlay)
                 Divider()
+                LicenseBanner(licenseManager: licenseManager)
                 footerBar
             }
         }

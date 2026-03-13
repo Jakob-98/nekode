@@ -5,6 +5,17 @@ import SwiftUI
 class PetWindow: NSPanel {
     let petId: String
 
+    /// Z-order among pet windows. Higher = closer to viewer (in front).
+    /// Updated each tick based on Y position (lower Y = higher index).
+    var depthOrder: Int = 0 {
+        didSet {
+            guard depthOrder != oldValue else { return }
+            // Use a sub-level offset so all pets stay in the .floating range
+            // but are ordered relative to each other.
+            level = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + depthOrder)
+        }
+    }
+
     init(petId: String, petView: some View, petSize: CGFloat) {
         self.petId = petId
         super.init(
@@ -18,14 +29,16 @@ class PetWindow: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
+        // Mouse events are accepted; hitTest in PetHostingView returns nil
+        // for clicks outside the sprite, which lets them pass through.
         ignoresMouseEvents = false
         collectionBehavior = [
-            .canJoinAllSpaces, .stationary, .fullScreenAuxiliary
+            .canJoinAllSpaces, .stationary, .fullScreenAuxiliary,
+            .ignoresCycle,
         ]
         isMovableByWindowBackground = false
         hidesOnDeactivate = false
         animationBehavior = .none
-        // Accept mouse-moved events so gestures work without key status
         acceptsMouseMovedEvents = true
 
         let hostingView = PetHostingView(rootView: petView)
@@ -37,9 +50,9 @@ class PetWindow: NSPanel {
         updateSize(petSize)
     }
 
-    // Allow becoming key briefly for gesture delivery, but
-    // .nonactivatingPanel prevents stealing focus from the user's app.
-    override var canBecomeKey: Bool { true }
+    // Never become key or main — prevents alt-tab focus stealing.
+    // .nonactivatingPanel + ignoresMouseEvents handles event routing.
+    override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
     /// Update window position from model coordinates.
@@ -86,25 +99,31 @@ class PetHostingView<Content: View>: NSHostingView<Content>,
         petSize = size
     }
 
-    override func hitTest(_ point: NSPoint) -> NSView? {
+    private func spriteHitRect() -> NSRect {
         let centerX = bounds.midX
         let centerY = bounds.midY
-
-        // The sprite frame is petSize × petSize, but the visible pixel
-        // art only fills roughly the center 70%. Use that as hit area.
-        let visibleW = petSize * 0.7
-        let visibleH = petSize * 0.7
-        // Name tag: offset petSize * 0.75 below center, ~12pt tall
-        let nameBottom = centerY - petSize * 0.75 - 8
-
-        let hitRect = NSRect(
+        let visibleW = petSize * PetPhysics.hitboxFactor
+        let visibleH = petSize * PetPhysics.hitboxFactor
+        let downShift: CGFloat = petSize * PetPhysics.hitboxDownShift
+        // Sprite body
+        let spriteRect = NSRect(
             x: centerX - visibleW * 0.5,
-            y: nameBottom,
+            y: centerY - visibleH * 0.5 - downShift,
             width: visibleW,
-            height: (centerY + visibleH * 0.5) - nameBottom
+            height: visibleH
         )
+        // Name tag: sits below the sprite (offset petSize * 0.75 below center, ~14pt tall)
+        let nameTagRect = NSRect(
+            x: centerX - visibleW * 0.5,
+            y: centerY - petSize * 0.75 - 8,
+            width: visibleW,
+            height: 16
+        )
+        return spriteRect.union(nameTagRect)
+    }
 
-        if hitRect.contains(point) {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        if spriteHitRect().contains(point) {
             return super.hitTest(point)
         }
         return nil

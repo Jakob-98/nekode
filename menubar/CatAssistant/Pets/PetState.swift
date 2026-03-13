@@ -142,12 +142,9 @@ enum PetState: Int, CaseIterable {
     }
 
     /// Whether the pet should be actively chasing the cursor.
-    var isMoving: Bool {
-        switch self {
-        case .alerting, .barking: return true
-        default: return false
-        }
-    }
+    /// Identical to `isAttentionSeeking` — retained as a semantic alias
+    /// for readability at call sites that care about movement vs. status.
+    var isMoving: Bool { isAttentionSeeking }
 
     /// Whether this state represents an attention-seeking behavior.
     var isAttentionSeeking: Bool {

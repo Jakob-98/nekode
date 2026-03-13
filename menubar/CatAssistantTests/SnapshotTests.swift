@@ -11,7 +11,7 @@ final class SnapshotTests: XCTestCase {
     ///     -only-testing:CctopMenubarTests/SnapshotTests/testGenerateMenubarScreenshot \
     ///     -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
     func testGenerateMenubarScreenshot() throws {
-        let view = PopupView(sessions: Session.qaShowcase, updater: DisabledUpdater())
+        let view = PopupView(sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared)
         try renderScreenshot(view: view, colorScheme: .light, filename: "menubar-light.png")
         try renderScreenshot(view: view, colorScheme: .dark, filename: "menubar-dark.png")
     }
@@ -20,14 +20,14 @@ final class SnapshotTests: XCTestCase {
         let rc = RefocusController()
         rc.isActive = true
         let view = PopupView(
-            sessions: Session.qaShowcase, updater: DisabledUpdater(), refocus: rc
+            sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared, refocus: rc
         )
         try renderScreenshot(view: view, colorScheme: .dark, filename: "menubar-refocus.png")
     }
 
     func testGenerateCompactScreenshot() throws {
         let view = PopupView(
-            sessions: Session.qaShowcase, updater: DisabledUpdater(),
+            sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared,
             isCompact: true, isCompactModeEnabled: true
         )
         try renderScreenshot(view: view, colorScheme: .light, filename: "menubar-compact-light.png")
@@ -37,7 +37,7 @@ final class SnapshotTests: XCTestCase {
     func testGenerateRecentProjectsScreenshot() throws {
         let view = PopupView(
             sessions: Session.qaShowcase, recentProjects: RecentProject.mockRecents,
-            updater: DisabledUpdater(), initialTab: .recent
+            updater: DisabledUpdater(), licenseManager: LicenseManager.shared, initialTab: .recent
         )
         try renderScreenshot(view: view, colorScheme: .dark, filename: "menubar-recent.png")
     }

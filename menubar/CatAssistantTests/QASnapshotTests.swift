@@ -131,7 +131,7 @@ final class QASnapshotTests: XCTestCase {
     }
 
     private func popupView(for sessions: [Session]) -> some View {
-        PopupView(sessions: sessions, updater: DisabledUpdater())
+        PopupView(sessions: sessions, updater: DisabledUpdater(), licenseManager: LicenseManager.shared)
             .frame(width: 320)
             .background(Color(NSColor.windowBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -145,7 +145,7 @@ final class QASnapshotTests: XCTestCase {
         name: String,
         colorScheme: ColorScheme = .light
     ) throws {
-        let view = PopupView(sessions: sessions, updater: DisabledUpdater())
+        let view = PopupView(sessions: sessions, updater: DisabledUpdater(), licenseManager: LicenseManager.shared)
             .frame(width: 320)
             .background(Color(NSColor.windowBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -176,7 +176,7 @@ final class QASnapshotTests: XCTestCase {
         name: String,
         colorScheme: ColorScheme = .light
     ) throws {
-        let view = SettingsSection(updater: updater, pluginManager: PluginManager())
+        let view = SettingsSection(updater: updater, licenseManager: LicenseManager.shared, pluginManager: PluginManager())
             .frame(width: 320)
             .padding()
             .background(Color(NSColor.windowBackgroundColor))

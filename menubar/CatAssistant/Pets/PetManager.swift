@@ -23,6 +23,14 @@ class PetManager: ObservableObject {
         }
     }
 
+    /// Sources for which desktop pets are disabled (e.g. "copilot", "opencode").
+    /// Persisted via UserDefaults. Sessions from disabled sources won't spawn pets.
+    private var disabledPetSources: Set<String> {
+        didSet {
+            UserDefaults.standard.set(Array(disabledPetSources), forKey: "disabledPetSources")
+        }
+    }
+
     // MARK: - Vibe Zone
 
     /// The shared hangout area for all pets. Defaults to lower-right corner.
@@ -55,14 +63,32 @@ class PetManager: ObservableObject {
         }
     }
 
-    /// Size of the vibe zone — constant, not user-adjustable (for now).
-    private var vibeZoneSize: CGSize { CGSize(width: 200, height: 120) }
+    /// Size of the vibe zone — scales with pet count so pets aren't crammed.
+    /// Base size fits 1-2 pets comfortably; each additional pet adds space.
+    private var vibeZoneSize: CGSize {
+        let count = max(1, pets.count)
+        let baseW = PetPhysics.vibeZoneBaseWidth
+        let baseH = PetPhysics.vibeZoneBaseHeight
+        // Each pet beyond 2 adds space so neighbors aren't forced together
+        let extra = max(0, count - 2)
+        let w = baseW + CGFloat(extra) * PetPhysics.vibeZoneExtraWidth
+        let h = baseH + CGFloat(extra) * PetPhysics.vibeZoneExtraHeight
+        // Clamp to screen so the zone doesn't exceed available space
+        let screen = NSScreen.main?.visibleFrame ?? PetPhysics.fallbackScreen
+        return CGSize(
+            width: min(w, screen.width - 80),
+            height: min(h, screen.height * 0.4)
+        )
+    }
 
     init(sessionManager: SessionManager) {
         self.sessionManager = sessionManager
         // Restore hidden pet IDs from UserDefaults
         let saved = UserDefaults.standard.stringArray(forKey: "hiddenPetIds") ?? []
         self.hiddenPetIds = Set(saved)
+        // Restore disabled pet sources from UserDefaults
+        let savedSources = UserDefaults.standard.stringArray(forKey: "disabledPetSources") ?? []
+        self.disabledPetSources = Set(savedSources)
         observePreferences()
         observeSessions()
         // If pets were enabled before restart, start them up now.
@@ -91,6 +117,14 @@ class PetManager: ObservableObject {
                         self.enable()
                     } else {
                         self.disable()
+                    }
+                }
+                // Check if disabled sources changed
+                let newSources = Set(UserDefaults.standard.stringArray(forKey: "disabledPetSources") ?? [])
+                if newSources != self.disabledPetSources {
+                    self.disabledPetSources = newSources
+                    if self.enabled {
+                        self.syncWithSessions(self.sessionManager.sessions)
                     }
                 }
             }
@@ -127,16 +161,19 @@ class PetManager: ObservableObject {
 
     /// Diff current pets vs sessions to create/remove as needed.
     func syncWithSessions(_ sessions: [Session]) {
-        let activeIds = Set(sessions.map(\.id))
+        // Filter out sessions from disabled sources
+        let sourceKey = { (s: Session) -> String in s.source ?? "claude" }
+        let allowedSessions = sessions.filter { !disabledPetSources.contains(sourceKey($0)) }
+
+        let activeIds = Set(allowedSessions.map(\.id))
         let petIds = Set(pets.keys)
 
         // Spawn new pets (skip hidden ones)
-        for session in sessions where !petIds.contains(session.id) && !hiddenPetIds.contains(session.id) {
+        for session in allowedSessions where !petIds.contains(session.id) && !hiddenPetIds.contains(session.id) {
             spawnPet(for: session)
         }
 
-        // Despawn removed sessions — also unhide them so they reappear
-        // if the session comes back later
+        // Despawn removed sessions (including those now filtered by source)
         for petId in petIds where !activeIds.contains(petId) {
             despawnPet(id: petId)
         }
@@ -144,7 +181,7 @@ class PetManager: ObservableObject {
         hiddenPetIds = hiddenPetIds.filter { activeIds.contains($0) }
 
         // Update existing pets' sessions
-        for session in sessions {
+        for session in allowedSessions {
             if let pet = pets[session.id] {
                 pet.session = session
                 PetAnimationEngine.updateStateTransition(
@@ -152,6 +189,24 @@ class PetManager: ObservableObject {
                 )
             }
         }
+    }
+
+    /// Toggle whether pets are shown for a given source key.
+    /// Source keys: "claude" (default/nil), "copilot", "opencode", "cli"
+    func togglePetsForSource(_ sourceKey: String, enabled: Bool) {
+        if enabled {
+            disabledPetSources.remove(sourceKey)
+        } else {
+            disabledPetSources.insert(sourceKey)
+        }
+        // Re-sync to spawn/despawn pets based on new filter
+        if self.enabled {
+            syncWithSessions(sessionManager.sessions)
+        }
+    }
+
+    func petsEnabledForSource(_ sourceKey: String) -> Bool {
+        !disabledPetSources.contains(sourceKey)
     }
 
     // MARK: - Spawn / Despawn
@@ -253,11 +308,14 @@ class PetManager: ObservableObject {
             Array(pets.values), minGap: PetPhysics.personalSpace
         )
 
-        // Sync window positions
+        // Sync window positions and z-order (lower Y = in front)
         let petSize = currentPetSize
-        for (id, window) in windows {
-            if let pet = pets[id] {
+        let sortedByDepth = pets.values.sorted { $0.position.y > $1.position.y }
+        for (zIndex, pet) in sortedByDepth.enumerated() {
+            if let window = windows[pet.id] {
                 window.syncPosition(position: pet.position, petSize: petSize)
+                // orderedIndex 0 = furthest back, increasing = closer to viewer
+                window.depthOrder = zIndex
             }
         }
     }

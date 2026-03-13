@@ -37,9 +37,17 @@ enum HookEvent: Equatable {
 
 enum Transition {
     /// Returns nil to mean "preserve current status".
-    static func forEvent(_ current: SessionStatus, event: HookEvent) -> SessionStatus? {
+    /// The `source` parameter allows source-specific behavior (e.g. Copilot's Stop means waiting for input).
+    static func forEvent(_ current: SessionStatus, event: HookEvent, source: String? = nil) -> SessionStatus? {
         switch event {
-        case .sessionStart, .stop: return .idle
+        case .sessionStart: return .idle
+        case .stop:
+            // VS Code Copilot doesn't send Notification hooks — Stop means the agent
+            // finished and is waiting for the user's next prompt (= waitingInput).
+            // For Claude Code (nil source), Stop means the user explicitly stopped,
+            // and a separate Notification(idle_prompt) event signals waiting for input.
+            if source == "copilot" { return .waitingInput }
+            return .idle
         case .userPromptSubmit, .preToolUse, .postToolUse: return .working
         case .notificationIdle: return .waitingInput
         case .notificationPermission, .permissionRequest: return .waitingPermission

@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh SessionStart"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh UserPromptSubmit"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh PreToolUse"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh PostToolUse"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh Stop"
+      }
+    ],
+    "SubagentStart": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh SubagentStart"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh SubagentStop"
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "$HOME/.cat/plugins/copilot/hooks/run-hook.sh PreCompact"
+      }
+    ]
+  }
+}

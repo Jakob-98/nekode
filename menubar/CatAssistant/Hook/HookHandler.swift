@@ -5,7 +5,7 @@ enum HookHandler {
     // MIGRATION(v0.6.0): Remove after all users have migrated to PID-keyed sessions.
     private static let noPIDMaxAge: TimeInterval = 300
 
-    static func handleHook(hookName: String, input: HookInput) throws {
+    static func handleHook(hookName: String, input: HookInput, source: String? = nil) throws {
         let event = HookEvent.parse(hookName: hookName, notificationType: input.notificationType)
 
         if event == .sessionEnd { return }
@@ -20,16 +20,19 @@ enum HookHandler {
         let terminal = captureTerminalInfo()
         let startTime = Session.processStartTime(pid: pid)
 
-        let freshSession = Session(sessionId: safeId, projectPath: input.cwd, branch: branch, terminal: terminal)
+        var freshSession = Session(sessionId: safeId, projectPath: input.cwd, branch: branch, terminal: terminal)
+        if let source { freshSession.source = source }
         var session = loadOrCreateSession(
             path: sessionPath, event: event, startTime: startTime, fresh: freshSession
         )
+        // Ensure source is set on existing sessions too (e.g. first hook didn't have --source)
+        if let source, session.source == nil { session.source = source }
 
         session.pid = pid
         session.pidStartTime = startTime
 
         let oldStatus = session.status.rawValue
-        let newStatus = Transition.forEvent(session.status, event: event)
+        let newStatus = Transition.forEvent(session.status, event: event, source: session.source)
 
         if let newStatus {
             session.status = newStatus

@@ -76,6 +76,10 @@ cp "$REPO_ROOT/menubar/build/Build/Products/Release/catwait" "$APP/Contents/MacO
 mkdir -p "$APP/Contents/Resources"
 cp "$REPO_ROOT/plugins/opencode/plugin.js" "$APP/Contents/Resources/opencode-plugin.js"
 
+# Copy copilot hooks into Resources
+cp "$REPO_ROOT/plugins/copilot/hooks/hooks.json" "$APP/Contents/Resources/copilot-hooks.json"
+cp "$REPO_ROOT/plugins/copilot/hooks/run-hook.sh" "$APP/Contents/Resources/copilot-run-hook.sh"
+
 # Ad-hoc sign (innermost first — no --deep)
 echo "==> Signing app bundle..."
 

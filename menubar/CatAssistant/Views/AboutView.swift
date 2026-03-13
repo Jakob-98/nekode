@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    private let repoURL = "https://github.com/jakobserlier/catassistant"
-
     private var version: String { Bundle.main.appVersion }
 
     var body: some View {
@@ -26,12 +24,9 @@ struct AboutView: View {
             Divider().padding(.horizontal, 14)
 
             VStack(spacing: 4) {
-                HoverLinkButton(
-                    label: "\u{00A9} 2025 Stan Lo",
-                    url: "https://jakobserlier.dev",
-                    font: .system(size: 11),
-                    color: Color.textSecondary
-                )
+                Text("\u{00A9} 2025 Jakob Serlier")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.textSecondary)
                 Text("MIT License")
                     .font(.system(size: 10))
                     .foregroundStyle(Color.textMuted)
@@ -40,33 +35,20 @@ struct AboutView: View {
 
             Divider().padding(.horizontal, 14)
 
-            HStack(spacing: 16) {
-                linkButton("GitHub", url: repoURL)
-                linkButton("Report Issue", url: "\(repoURL)/issues")
+            VStack(spacing: 2) {
+                HoverLinkButton(
+                    label: "Built on cctop by Stan Lo",
+                    url: "https://github.com/st0012/cctop",
+                    font: .system(size: 9),
+                    color: Color.textMuted
+                )
+                Text("No analytics \u{00B7} No telemetry")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.textMuted)
             }
             .padding(.vertical, 10)
-
-            Text("Built with KeyboardShortcuts & Sparkle")
-                .font(.system(size: 9))
-                .foregroundStyle(Color.textMuted)
-                .padding(.bottom, 4)
-
-            Text("No analytics \u{00B7} No telemetry")
-                .font(.system(size: 9))
-                .foregroundStyle(Color.textMuted)
-                .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private func linkButton(_ label: String, url: String) -> some View {
-        HoverLinkButton(
-            label: label,
-            url: url,
-            font: .system(size: 11, weight: .medium),
-            color: Color.amber,
-            showArrow: true
-        )
     }
 }
 

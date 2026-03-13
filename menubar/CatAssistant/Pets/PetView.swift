@@ -124,6 +124,9 @@ class PetMouseView: NSView {
     var onRightClick: (NSPoint) -> Void
     private var dragStartModelPosition: CGPoint?
     private var dragStartScreenPoint: NSPoint?
+    /// Set when a double-click is detected; prevents the first click's
+    /// mouseUp from running drag-end logic (the double-click race bug).
+    private var didDoubleClick: Bool = false
 
     init(
         pet: PetModel,
@@ -143,21 +146,39 @@ class PetMouseView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 2 {
+            // Cancel any drag that the first click started
+            didDoubleClick = true
+            if dragStartModelPosition != nil {
+                dragStartModelPosition = nil
+                dragStartScreenPoint = nil
+                DispatchQueue.main.async { [weak self] in
+                    self?.pet.isDragging = false
+                }
+            }
             DispatchQueue.main.async { [weak self] in
                 self?.onDoubleClick()
             }
             return
         }
         // Start drag
+        didDoubleClick = false
         dragStartModelPosition = pet.position
         dragStartScreenPoint = NSEvent.mouseLocation
         DispatchQueue.main.async { [weak self] in
-            self?.pet.isDragging = true
+            guard let self else { return }
+            // Briefly wake a sleeping pet when picked up
+            if self.pet.state == .sleeping {
+                self.pet.sleepWakeTimeRemaining = PetPhysics.sleepWakeDuration
+                self.pet.currentFrame = 0
+                self.pet.frameAccumulator = 0
+            }
+            self.pet.isDragging = true
         }
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let startModel = dragStartModelPosition,
+        guard !didDoubleClick,
+              let startModel = dragStartModelPosition,
               let startScreen = dragStartScreenPoint else { return }
         let current = NSEvent.mouseLocation
         // Screen coordinates: Y-up, same as model coordinates
@@ -172,18 +193,23 @@ class PetMouseView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        // If this mouseUp belongs to a double-click, skip all drag-end logic
+        if didDoubleClick {
+            didDoubleClick = false
+            return
+        }
         guard dragStartModelPosition != nil else { return }
         dragStartModelPosition = nil
         dragStartScreenPoint = nil
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.pet.isDragging = false
-                // Landing squash and dust on drop
-                PetAnimationEngine.triggerSquash(
-                    self.pet, scaleX: 1.15, scaleY: 0.85, duration: 0.1
-                )
-                PetAnimationEngine.spawnDust(self.pet)
-                // Dragging an attention-seeking pet dismisses the alert
+            // Landing squash and dust on drop
+            PetAnimationEngine.triggerSquash(
+                self.pet, scaleX: 1.15, scaleY: 0.85, duration: 0.1
+            )
+            PetAnimationEngine.spawnDust(self.pet)
+            // Dragging an attention-seeking pet dismisses the alert
             // and restores the pre-chase home position
             if self.pet.state.isAttentionSeeking {
                 self.pet.dismissedStatus = self.pet.session.status

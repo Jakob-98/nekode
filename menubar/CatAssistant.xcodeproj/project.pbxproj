@@ -60,6 +60,8 @@
 		SN0000010000000000000001 /* SessionNameLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = SN0000020000000000000001 /* SessionNameLookup.swift */; };
 		SN0000030000000000000001 /* SessionNameLookupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SN0000040000000000000001 /* SessionNameLookupTests.swift */; };
 		SN0000050000000000000001 /* SessionNameLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = SN0000020000000000000001 /* SessionNameLookup.swift */; };
+		LB0000010000000000000001 /* LicenseBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = LB0000020000000000000001 /* LicenseBanner.swift */; };
+		LM0000010000000000000001 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = LM0000020000000000000001 /* LicenseManager.swift */; };
 		SP0000010000000000000001 /* SparkleUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = SP0000020000000000000001 /* SparkleUpdater.swift */; };
 		T10000010000000000000001 /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000001 /* SessionTests.swift */; };
 		T10000030000000000000001 /* SessionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000040000000000000001 /* SessionStatusTests.swift */; };
@@ -146,6 +148,8 @@
 		Q10000020000000000000001 /* QASnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASnapshotTests.swift; sourceTree = "<group>"; };
 		SN0000020000000000000001 /* SessionNameLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionNameLookup.swift; sourceTree = "<group>"; };
 		SN0000040000000000000001 /* SessionNameLookupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionNameLookupTests.swift; sourceTree = "<group>"; };
+		LB0000020000000000000001 /* LicenseBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseBanner.swift; sourceTree = "<group>"; };
+		LM0000020000000000000001 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		SP0000020000000000000001 /* SparkleUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdater.swift; sourceTree = "<group>"; };
 		T10000020000000000000001 /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
 		T10000040000000000000001 /* SessionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStatusTests.swift; sourceTree = "<group>"; };
@@ -223,6 +227,7 @@
 				JM0000020000000000000001 /* RefocusController.swift */,
 				CM0000020000000000000001 /* CompactModeController.swift */,
 				PC0000020000000000000001 /* PanelCoordinator.swift */,
+				LM0000020000000000000001 /* LicenseManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -298,6 +303,7 @@
 				RV0000020000000000000001 /* RecentProjectCardView.swift */,
 				OB0000020000000000000001 /* OpenCodeBanner.swift */,
 				AB0000020000000000000001 /* AboutView.swift */,
+				LB0000020000000000000001 /* LicenseBanner.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -530,6 +536,8 @@
 				PG0000010000000000000001 /* PetManager.swift in Sources */,
 				SS0000010000000000000001 /* SpriteSheetView.swift in Sources */,
 				SG0000010000000000000001 /* SpriteGridConfig.swift in Sources */,
+				LM0000010000000000000001 /* LicenseManager.swift in Sources */,
+				LB0000010000000000000001 /* LicenseBanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

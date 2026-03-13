@@ -2,10 +2,10 @@ import Foundation
 
 /// CLI entry point for cathook.
 ///
-/// Called by Claude Code hooks to track session state.
+/// Called by Claude Code / VS Code Copilot hooks to track session state.
 /// Reads hook event JSON from stdin and updates session files in ~/.cat/sessions/.
 ///
-/// Usage: cathook <HookName>
+/// Usage: cathook [--source <source>] <HookName>
 @main
 struct HookMain {
     static let version = "0.8.2"
@@ -29,7 +29,20 @@ struct HookMain {
             break
         }
 
-        let hookName = args[1]
+        // Parse optional --source flag
+        var source: String?
+        var hookName: String
+
+        if args[1] == "--source" {
+            guard args.count >= 4 else {
+                HookLogger.logError("--source requires a value and a hook name")
+                exit(0)
+            }
+            source = args[2]
+            hookName = args[3]
+        } else {
+            hookName = args[1]
+        }
 
         guard let stdinBuf = readStdin(hookName: hookName) else { exit(0) }
 
@@ -42,7 +55,7 @@ struct HookMain {
         }
 
         do {
-            try HookHandler.handleHook(hookName: hookName, input: input)
+            try HookHandler.handleHook(hookName: hookName, input: input, source: source)
         } catch {
             HookLogger.logError("\(hookName): \(error)")
             exit(0)
@@ -79,17 +92,18 @@ struct HookMain {
 
     private static func printHelp() {
         print("cathook \(version)")
-        print("Claude Code hook handler for CatAssistant session tracking.\n")
-        print("This binary is called by Claude Code hooks via the CatAssistant plugin.")
-        print("It reads hook event JSON from stdin and updates session files")
-        print("in ~/.cat/sessions/.\n")
+        print("Hook handler for CatAssistant session tracking.\n")
+        print("This binary is called by Claude Code and VS Code Copilot hooks")
+        print("via the CatAssistant plugin. It reads hook event JSON from stdin")
+        print("and updates session files in ~/.cat/sessions/.\n")
         print("USAGE:")
-        print("    cathook <HOOK_NAME>\n")
+        print("    cathook [--source <SOURCE>] <HOOK_NAME>\n")
         print("HOOK NAMES:")
         print("    SessionStart, UserPromptSubmit, PreToolUse, PostToolUse,")
         print("    Stop, Notification, PermissionRequest, PreCompact, SessionEnd\n")
         print("OPTIONS:")
-        print("    -h, --help       Print this help message")
-        print("    -V, --version    Print version")
+        print("    --source <SOURCE>  Set session source (e.g. copilot, opencode)")
+        print("    -h, --help         Print this help message")
+        print("    -V, --version      Print version")
     }
 }
