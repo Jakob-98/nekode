@@ -1,0 +1,19 @@
+{
+  "name": "nekode",
+  "owner": {
+    "name": "Jakob Serlier",
+    "email": "hi@nekode.dev"
+  },
+  "metadata": {
+    "description": "AI coding session monitor",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "nekode",
+      "source": "./plugins/nekode",
+      "description": "Monitor and navigate Claude Code sessions across workspaces",
+      "version": "1.0.0"
+    }
+  ]
+}

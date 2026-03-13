@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh SessionStart"
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh UserPromptSubmit"
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh PreToolUse"
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh PostToolUse"
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh Stop"
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh SubagentStart"
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh SubagentStop"
+      }
+    ],
+    "preCompact": [
+      {
+        "type": "command",
+        "bash": "$HOME/.nekode/plugins/copilot-cli/hooks/run-hook.sh PreCompact"
+      }
+    ]
+  }
+}

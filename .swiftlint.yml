@@ -1,0 +1,41 @@
+included:
+  - menubar/Nekode
+
+excluded:
+  - menubar/build
+
+disabled_rules:
+  - trailing_comma
+  - large_tuple
+  - multiple_closures_with_trailing_closure
+  - comma  # Pets sprite configs use alignment-padding after commas
+  - todo   # Allow TODO comments for planned work
+
+line_length:
+  warning: 150
+  error: 200
+
+cyclomatic_complexity:
+  warning: 25
+  error: 35
+
+function_body_length:
+  warning: 130
+  error: 200
+
+file_length:
+  warning: 1500
+  error: 1800
+
+type_body_length:
+  warning: 900
+  error: 1200
+
+identifier_name:
+  min_length:
+    warning: 1
+  excluded:
+    - id
+
+force_try:
+  severity: warning

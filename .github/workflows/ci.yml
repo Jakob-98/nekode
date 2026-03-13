@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  swift-lint:
+    name: Swift Lint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: SwiftLint
+        run: swiftlint lint --strict
+
+  swift-test:
+    name: Swift Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app
+      - name: Cache DerivedData
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: menubar/build/
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('menubar/Nekode.xcodeproj/**') }}
+          restore-keys: |
+            deriveddata-${{ runner.os }}-
+      - name: Build menubar app
+        run: xcodebuild build -project menubar/Nekode.xcodeproj -scheme Nekode -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
+      - name: Build nekode CLI
+        run: xcodebuild build -project menubar/Nekode.xcodeproj -scheme nekode -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
+      - name: Smoke test nekode hook
+        run: |
+          SMOKE_DIR=$(mktemp -d)
+          echo '{"session_id":"ci-test","cwd":"/tmp/proj","hook_event_name":"SessionStart"}' \
+            | NEKODE_SESSIONS_DIR="$SMOKE_DIR" menubar/build/Build/Products/Debug/nekode hook SessionStart
+          SESSION_FILE=$(ls "$SMOKE_DIR"/*.json | head -1)
+          test -f "$SESSION_FILE"
+          grep -q '"idle"' "$SESSION_FILE"
+          grep -q '"ci-test"' "$SESSION_FILE"
+          rm -rf "$SMOKE_DIR"
+      - name: Test
+        run: xcodebuild test -project menubar/Nekode.xcodeproj -scheme Nekode -configuration Debug -derivedDataPath menubar/build/

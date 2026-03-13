@@ -1,0 +1,11 @@
+{
+  "name": "nekode",
+  "description": "Monitor and navigate Claude Code sessions across workspaces",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jakob Serlier",
+    "url": "https://github.com/Jakob-98"
+  },
+  "repository": "https://github.com/Jakob-98/nekode",
+  "license": "SEE LICENSE IN LICENSE"
+}
