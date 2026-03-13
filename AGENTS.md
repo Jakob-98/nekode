@@ -1,10 +1,10 @@
 # AGENTS.md
 
-macOS menubar app (CatAssistant) that monitors coding sessions from Claude Code, opencode, vscode (in development), and arbitrary CLI commands. Shows session status in the menubar and as desktop pets — pixel-art animals that mirror each session's state. Includes `cathook` (shell hook for session tracking) and `catwait` (pipe-based CLI for monitoring any command).
+**Nekode** — macOS menubar app that monitors coding sessions from Claude Code, opencode, VS Code Copilot, and arbitrary CLI commands. Shows session status in the menubar and as desktop pets — pixel-art animals that mirror each session's state. Single CLI binary `nekode` with subcommands: `nekode hook` (session tracking) and `nekode wait` / `... | nekode` (pipe-based monitoring).
 
 Build: `make build` / `make install` / `make run`
 
-regarding testing. I'd rather have fewer tests which are clear, than a large sum of tests for arbitrary small behavior features.
+Regarding testing: fewer clear tests preferred over many small behavior tests.
 
 
 ## WORKLIST
@@ -13,7 +13,9 @@ keep track of all work ongoing/done work. ONE LINE per complex task. You MAY add
 
 format: - dd-mm-yyyy: S: ONGOING/DONE/[...] -  
 
-- (next agent: feel free to add current date, and todo) - add oneliner install  | sh option both to frontend and a script as part of the public repository, following the brew plan described in docs/distribution.md
+- 13-03-2026: S: DONE. **Oneliner install script.** `scripts/install.sh` — downloads latest release zip for arch, extracts to /Applications, symlinks CLI. Added to website (`website/public/install.sh` symlink), `docs/distribution.md`. Usage: `curl -fsSL https://nekode.dev/install.sh | bash`
+- (next agent: feel free to add current date, and todo)
+- 13-03-2026: S: DONE. **Rename CatAssistant → Nekode everywhere.** All phases complete: filesystem, Xcode project, Swift source, CLI merge (cathook+catwait→nekode), plugins, scripts, CI, config/packaging, docs, website, Raycast extension. Build + tests verified. See `docs/rename-plan.md` for the full plan.
 - 10-03-2026: S: DONE. VS Code Copilot integration (hooks, install UI, detection, hook format, JSONC settings). See `docs/copilot-integration.md`
 - 10-03-2026: S: DONE. Per-source pet toggle (CC/CP/OC/CLI) via UserDefaults. `PetManager.swift`, `SettingsSection.swift`
 - 10-03-2026: S: DONE. Copilot Stop→waitingInput fix (Copilot has no Notification hook). `HookEvent.swift`

@@ -29,16 +29,16 @@ echo "Bumping version to $NEW_VERSION..."
 sed -i '' "s/^  version \".*\"/  version \"$NEW_VERSION\"/" "$REPO_ROOT/packaging/homebrew-cask.rb"
 echo "  Updated packaging/homebrew-cask.rb"
 
-# 2. plugins/catassistant/.claude-plugin/plugin.json
-sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/catassistant/.claude-plugin/plugin.json"
-echo "  Updated plugins/catassistant/.claude-plugin/plugin.json"
+# 2. plugins/nekode/.claude-plugin/plugin.json
+sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/nekode/.claude-plugin/plugin.json"
+echo "  Updated plugins/nekode/.claude-plugin/plugin.json"
 
 # 3. .claude-plugin/marketplace.json (has two version fields)
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/g" "$REPO_ROOT/.claude-plugin/marketplace.json"
 echo "  Updated .claude-plugin/marketplace.json"
 
 # 4. Xcode project - MARKETING_VERSION (all build configs)
-PBXPROJ="$REPO_ROOT/menubar/CatAssistant.xcodeproj/project.pbxproj"
+PBXPROJ="$REPO_ROOT/menubar/Nekode.xcodeproj/project.pbxproj"
 sed -i '' "s/MARKETING_VERSION = .*/MARKETING_VERSION = $NEW_VERSION;/" "$PBXPROJ"
 echo "  Updated pbxproj MARKETING_VERSION"
 
@@ -47,17 +47,12 @@ BUILD_NUM=$(echo "$NEW_VERSION" | awk -F. '{print $1*10000 + $2*100 + $3}')
 sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $BUILD_NUM;/" "$PBXPROJ"
 echo "  Updated pbxproj CURRENT_PROJECT_VERSION to $BUILD_NUM"
 
-# 6. HookMain.swift version string
-HOOK_MAIN="$REPO_ROOT/menubar/CatAssistant/Hook/HookMain.swift"
-sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$HOOK_MAIN"
-echo "  Updated HookMain.swift version"
+# 6. NekodeMain.swift version string
+NEKODE_MAIN="$REPO_ROOT/menubar/Nekode/CLI/NekodeMain.swift"
+sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$NEKODE_MAIN"
+echo "  Updated NekodeMain.swift version"
 
-# 7b. CatWaitMain.swift version string
-CATWAIT_MAIN="$REPO_ROOT/menubar/CatAssistant/CatWait/CatWaitMain.swift"
-sed -i '' "s/static let version = \".*\"/static let version = \"$NEW_VERSION\"/" "$CATWAIT_MAIN"
-echo "  Updated CatWaitMain.swift version"
-
-# 8. plugins/opencode/package.json
+# 7. plugins/opencode/package.json
 sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "$REPO_ROOT/plugins/opencode/package.json"
 echo "  Updated plugins/opencode/package.json"
 

@@ -1,11 +1,11 @@
 #!/bin/sh
-# run-hook.sh - Locate and run cathook binary with --source copilot
-# Shipped with the CatAssistant Copilot plugin.
-# Buffers stdin, logs a SHIM entry to the per-session log, then dispatches to cathook.
+# run-hook.sh - Locate and run nekode binary with --source copilot
+# Shipped with the Nekode Copilot plugin.
+# Buffers stdin, logs a SHIM entry to the per-session log, then dispatches to nekode hook.
 
 EVENT="$1"
 umask 077
-LOGS_DIR="$HOME/.cat/logs"
+LOGS_DIR="$HOME/.nekode/logs"
 mkdir -p "$LOGS_DIR"
 
 # Buffer stdin so we can log before dispatching
@@ -26,12 +26,12 @@ TS=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
 echo "$TS SHIM(copilot) $EVENT $LABEL dispatching" >> "$LOG" 2>/dev/null
 
-if [ -x "$HOME/.cat/bin/cathook" ]; then
-    echo "$INPUT" | "$HOME/.cat/bin/cathook" --source copilot "$EVENT"
-elif [ -x "/Applications/CatAssistant.app/Contents/MacOS/cathook" ]; then
-    echo "$INPUT" | /Applications/CatAssistant.app/Contents/MacOS/cathook --source copilot "$EVENT"
-elif [ -x "$HOME/Applications/CatAssistant.app/Contents/MacOS/cathook" ]; then
-    echo "$INPUT" | "$HOME/Applications/CatAssistant.app/Contents/MacOS/cathook" --source copilot "$EVENT"
+if [ -x "$HOME/.nekode/bin/nekode" ]; then
+    echo "$INPUT" | "$HOME/.nekode/bin/nekode" hook --source copilot "$EVENT"
+elif [ -x "/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
+    echo "$INPUT" | /Applications/Nekode.app/Contents/MacOS/nekode hook --source copilot "$EVENT"
+elif [ -x "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
+    echo "$INPUT" | "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" hook --source copilot "$EVENT"
 else
-    echo "$TS ERROR run-hook.sh: cathook not found ($LABEL event=$EVENT)" >> "$LOG" 2>/dev/null
+    echo "$TS ERROR run-hook.sh: nekode not found ($LABEL event=$EVENT)" >> "$LOG" 2>/dev/null
 fi

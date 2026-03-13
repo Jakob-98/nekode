@@ -1,26 +1,26 @@
-# Casks/catassistant.rb
-# This formula is for the homebrew-catassistant tap (github.com/jakobserlier/homebrew-catassistant)
-# Copy this file to Casks/catassistant.rb in that repo.
+# Casks/nekode.rb
+# This formula is for the homebrew-nekode tap (github.com/jakobserlier/homebrew-nekode)
+# Copy this file to Casks/nekode.rb in that repo.
 #
 # Usage:
-#   brew tap jakobserlier/catassistant
-#   brew install --cask catassistant
+#   brew tap jakobserlier/nekode
+#   brew install --cask nekode
 #
-cask "catassistant" do
+cask "nekode" do
   version "0.8.2"
 
   on_arm do
-    url "https://github.com/jakobserlier/catassistant/releases/download/v#{version}/catassistant-macOS-arm64.zip"
+    url "https://github.com/jakobserlier/nekode/releases/download/v#{version}/nekode-macOS-arm64.zip"
     sha256 "REPLACE_WITH_ARM64_SHA256"
   end
   on_intel do
-    url "https://github.com/jakobserlier/catassistant/releases/download/v#{version}/catassistant-macOS-x86_64.zip"
+    url "https://github.com/jakobserlier/nekode/releases/download/v#{version}/nekode-macOS-x86_64.zip"
     sha256 "REPLACE_WITH_X86_64_SHA256"
   end
 
-  name "CatAssistant"
+  name "Nekode"
   desc "Monitor AI coding sessions from the macOS menu bar"
-  homepage "https://github.com/jakobserlier/catassistant"
+  homepage "https://nekode.dev"
 
   livecheck do
     url :url
@@ -30,11 +30,10 @@ cask "catassistant" do
   auto_updates true
   depends_on macos: ">= :ventura"
 
-  app "CatAssistant.app"
-  binary "#{appdir}/CatAssistant.app/Contents/MacOS/cathook"
-
+  app "Nekode.app"
+  binary "#{appdir}/Nekode.app/Contents/MacOS/nekode"
 
   zap trash: [
-    "~/.cat",
+    "~/.nekode",
   ]
 end

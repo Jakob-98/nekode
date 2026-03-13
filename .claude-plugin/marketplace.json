@@ -1,5 +1,5 @@
 {
-  "name": "catassistant",
+  "name": "nekode",
   "owner": {
     "name": "Jakob Serlier",
     "email": "stan001212@gmail.com"
@@ -10,8 +10,8 @@
   },
   "plugins": [
     {
-      "name": "catassistant",
-      "source": "./plugins/catassistant",
+      "name": "nekode",
+      "source": "./plugins/nekode",
       "description": "Monitor and navigate Claude Code sessions across workspaces",
       "version": "0.8.2"
     }

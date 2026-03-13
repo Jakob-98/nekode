@@ -32,17 +32,17 @@ import {
   statusDescription,
   statusIcon,
 } from "./status-ui";
-import { CatSession } from "./types";
+import { NekodeSession } from "./types";
 
 /** Check if sessions come from multiple sources (CC + OC) */
-function hasMultipleSources(sessions: CatSession[]): boolean {
+function hasMultipleSources(sessions: NekodeSession[]): boolean {
   if (sessions.length === 0) return false;
   const firstSource = sessions[0].source ?? null;
   return sessions.some((s) => (s.source ?? null) !== firstSource);
 }
 
 /** Whether to use sectioned display: >= 3 sessions AND >= 2 status groups */
-function useSections(sessions: CatSession[]): boolean {
+function useSections(sessions: NekodeSession[]): boolean {
   if (sessions.length < 3) return false;
   const groups = new Set(sessions.map((s) => statusGroup(s.status)));
   return groups.size >= 2;
@@ -50,7 +50,7 @@ function useSections(sessions: CatSession[]): boolean {
 
 /** Build accessories array for a session list item */
 function sessionAccessories(
-  session: CatSession,
+  session: NekodeSession,
   showSource: boolean,
 ): List.Item.Accessory[] {
   const accessories: List.Item.Accessory[] = [];
@@ -77,7 +77,7 @@ function sessionAccessories(
 }
 
 /** Detail pane showing full session metadata */
-function SessionDetail({ session }: { session: CatSession }) {
+function SessionDetail({ session }: { session: NekodeSession }) {
   const toolDisplay = session.last_tool
     ? formatToolDisplay(session.last_tool, session.last_tool_detail)
     : undefined;
@@ -160,7 +160,7 @@ function SessionActions({
   onToggleDetail,
   revalidate,
 }: {
-  session: CatSession;
+  session: NekodeSession;
   isShowingDetail: boolean;
   onToggleDetail: () => void;
   revalidate: () => void;
@@ -226,7 +226,7 @@ function SessionItem({
   onToggleDetail,
   revalidate,
 }: {
-  session: CatSession;
+  session: NekodeSession;
   showSource: boolean;
   isShowingDetail: boolean;
   onToggleDetail: () => void;
@@ -254,9 +254,9 @@ function SessionItem({
 
 /** Filter sessions based on the selected dropdown value */
 function filterSessions(
-  sessions: CatSession[],
+  sessions: NekodeSession[],
   filter: string,
-): CatSession[] {
+): NekodeSession[] {
   switch (filter) {
     case "attention":
       return sessions.filter((s) => needsAttention(s.status));
@@ -316,7 +316,7 @@ export default function ShowSessions() {
 
   const dirExists = existsSync(getSessionsDir());
 
-  const renderItem = (session: CatSession) => (
+  const renderItem = (session: NekodeSession) => (
     <SessionItem
       key={session.pid?.toString() ?? session.session_id}
       session={session}
@@ -338,7 +338,7 @@ export default function ShowSessions() {
           <ActionPanel>
             <Action.OpenInBrowser
               title="Open Setup Guide"
-              url="https://github.com/jakobserlier/catassistant#readme"
+              url="https://github.com/jakobserlier/nekode#readme"
             />
           </ActionPanel>
         ) : undefined
@@ -376,8 +376,8 @@ export default function ShowSessions() {
         />
       ) : (
         <List.EmptyView
-          title="CatAssistant Not Installed"
-          description="Install CatAssistant to monitor your AI coding sessions"
+          title="Nekode Not Installed"
+          description="Install Nekode to monitor your AI coding sessions"
           icon={Icon.Download}
         />
       )}

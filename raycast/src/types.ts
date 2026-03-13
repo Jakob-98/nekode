@@ -1,5 +1,5 @@
-// TypeScript types mirroring menubar/CatAssistant/Models/Session.swift
-// and menubar/CatAssistant/Models/SessionStatus.swift
+// TypeScript types mirroring menubar/Nekode/Models/Session.swift
+// and menubar/Nekode/Models/SessionStatus.swift
 
 export const KNOWN_STATUSES = [
   "idle",
@@ -18,7 +18,7 @@ export interface TerminalInfo {
   tty?: string | null;
 }
 
-export interface CatSession {
+export interface NekodeSession {
   session_id: string;
   project_path: string;
   project_name: string;

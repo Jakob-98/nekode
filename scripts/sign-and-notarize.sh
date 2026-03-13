@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# sign-and-notarize.sh - Sign and notarize the CatAssistant.app bundle
+# sign-and-notarize.sh - Sign and notarize the Nekode.app bundle
 #
 # Usage:
-#   ./scripts/sign-and-notarize.sh dist/CatAssistant.app
-#   ./scripts/sign-and-notarize.sh --dry-run dist/CatAssistant.app
-#   ./scripts/sign-and-notarize.sh --sign-only dist/CatAssistant.app
+#   ./scripts/sign-and-notarize.sh dist/Nekode.app
+#   ./scripts/sign-and-notarize.sh --dry-run dist/Nekode.app
+#   ./scripts/sign-and-notarize.sh --sign-only dist/Nekode.app
 #
 # Required environment variables (unless --dry-run):
 #   APPLE_IDENTITY       - Signing identity (e.g. "Developer ID Application: Name (TEAMID)")
@@ -45,7 +45,7 @@ fi
 # Resolve to absolute path
 APP_PATH="$(cd "$(dirname "$APP_PATH")" && pwd)/$(basename "$APP_PATH")"
 
-ENTITLEMENTS="$(cd "$(dirname "$0")/.." && pwd)/menubar/CatAssistant/CatAssistant.entitlements"
+ENTITLEMENTS="$(cd "$(dirname "$0")/.." && pwd)/menubar/Nekode/Nekode.entitlements"
 
 if [[ ! -f "$ENTITLEMENTS" ]]; then
     echo "Error: Entitlements file not found at $ENTITLEMENTS"
@@ -177,7 +177,7 @@ if [[ "$SIGN_ONLY" = true ]]; then
 fi
 
 echo "==> Creating zip for notarization..."
-NOTARIZE_ZIP="$(dirname "$APP_PATH")/catassistant-notarize.zip"
+NOTARIZE_ZIP="$(dirname "$APP_PATH")/nekode-notarize.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$NOTARIZE_ZIP"
 
 echo "==> Submitting for notarization..."

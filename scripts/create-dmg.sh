@@ -7,11 +7,11 @@ set -euo pipefail
 #   brew install create-dmg
 #
 # Usage:
-#   ./scripts/create-dmg.sh                        # Uses dist/CatAssistant.app
-#   ./scripts/create-dmg.sh path/to/CatAssistant.app      # Custom .app path
+#   ./scripts/create-dmg.sh                        # Uses dist/Nekode.app
+#   ./scripts/create-dmg.sh path/to/Nekode.app     # Custom .app path
 #   ./scripts/create-dmg.sh --arch arm64            # Set arch suffix in output filename
 #
-# Output: dist/catassistant-macOS-<arch>.dmg (or dist/catassistant-macOS.dmg if no arch)
+# Output: dist/nekode-macOS-<arch>.dmg (or dist/nekode-macOS.dmg if no arch)
 
 ARCH=""
 APP_PATH=""
@@ -27,7 +27,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DIST_DIR="$REPO_ROOT/dist"
 
-APP_PATH="${APP_PATH:-$DIST_DIR/CatAssistant.app}"
+APP_PATH="${APP_PATH:-$DIST_DIR/Nekode.app}"
 
 if [ ! -d "$APP_PATH" ]; then
     echo "Error: $APP_PATH not found. Build with ./scripts/bundle-macos.sh first."
@@ -40,9 +40,9 @@ if ! command -v create-dmg &>/dev/null; then
 fi
 
 if [ -n "$ARCH" ]; then
-    DMG_NAME="catassistant-macOS-${ARCH}.dmg"
+    DMG_NAME="nekode-macOS-${ARCH}.dmg"
 else
-    DMG_NAME="catassistant-macOS.dmg"
+    DMG_NAME="nekode-macOS.dmg"
 fi
 
 DMG_PATH="$DIST_DIR/$DMG_NAME"
@@ -53,13 +53,13 @@ rm -f "$DMG_PATH"
 echo "==> Creating DMG from $APP_PATH..."
 
 create-dmg \
-    --volname "CatAssistant" \
+    --volname "Nekode" \
     --window-pos 200 120 \
     --window-size 600 400 \
     --icon-size 100 \
-    --icon "CatAssistant.app" 175 190 \
+    --icon "Nekode.app" 175 190 \
     --app-drop-link 425 190 \
-    --hide-extension "CatAssistant.app" \
+    --hide-extension "Nekode.app" \
     --no-internet-enable \
     "$DMG_PATH" \
     "$APP_PATH"

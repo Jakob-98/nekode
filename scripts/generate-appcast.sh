@@ -77,10 +77,10 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
-DOWNLOAD_URL_PREFIX="https://github.com/jakobserlier/catassistant/releases/download/v${VERSION}/"
-FEED_URL="https://raw.githubusercontent.com/jakobserlier/catassistant/master/appcast.xml"
+DOWNLOAD_URL_PREFIX="https://github.com/jakobserlier/nekode/releases/download/v${VERSION}/"
+FEED_URL="https://raw.githubusercontent.com/jakobserlier/nekode/master/appcast.xml"
 
-WORK_DIR=$(mktemp -d /tmp/catassistant-appcast.XXXXXX)
+WORK_DIR=$(mktemp -d /tmp/nekode-appcast.XXXXXX)
 
 cleanup() {
     rm -rf "$WORK_DIR" 2>/dev/null || true

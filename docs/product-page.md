@@ -6,7 +6,7 @@
 
 You're running three Claude Code sessions and an opencode instance across different projects. One is building, one is waiting for approval, one finished five minutes ago and you didn't notice. You've been tab-cycling between terminals trying to figure out which one needs you.
 
-CatAssistant fixes this. A menubar app that shows you the state of every AI coding session at a glance. Color-coded badges. Current tool in use. One click to jump to the right terminal. And if you want — pixel-art desktop pets that chase your cursor when a session needs attention.
+Nekode fixes this. A menubar app that shows you the state of every AI coding session at a glance. Color-coded badges. Current tool in use. One click to jump to the right terminal. And if you want — pixel-art desktop pets that chase your cursor when a session needs attention.
 
 ---
 
@@ -21,13 +21,13 @@ Click a card to raise the right VS Code, Cursor, or iTerm2 window — the exact 
 ### Desktop Pets
 Optional pixel-art animals (dog, cat, hamster) that live on your desktop, one per session. They sit calmly while the agent works. They sleep when idle. And when a session needs you — they get up, walk toward your cursor, and escalate from a polite "?" to an insistent "!!" over 60 seconds. Drag them to dismiss. Double-click to jump to the session. They have dust particles, breathing animations, squash-and-stretch physics, speech bubbles showing what the agent is doing, and a 4-tier idle system inspired by Clippy (without the unsolicited advice).
 
-### catwait — Monitor Anything
-Not just for AI agents. Pipe any long-running command through `catwait` and it becomes a live session:
+### nekode wait — Monitor Anything
+Not just for AI agents. Pipe any long-running command through `nekode wait` and it becomes a live session:
 
 ```bash
-cargo build --release 2>&1 | catwait
-npm run build | catwait --name "frontend build"
-make test 2>&1 | catwait --name "test suite"
+cargo build --release 2>&1 | nekode wait
+npm run build | nekode wait --name "frontend build"
+make test 2>&1 | nekode wait --name "test suite"
 ```
 
 The pet sits while it runs. When it finishes, the pet walks to your cursor. Press Enter to dismiss. You never have to stare at a terminal waiting for a build again.
@@ -41,15 +41,15 @@ All sessions also show up in Raycast with live status, filtering, and jump-to-se
 
 No server. No network. No analytics. No telemetry. All local.
 
-Plugins for Claude Code and opencode write tiny JSON files to `~/.cat/sessions/`. The menubar app watches that directory. That's the entire architecture. `catwait` writes the same JSON format. Any tool that writes a conforming JSON file gets a session card and a pet for free.
+Plugins for Claude Code and opencode write tiny JSON files to `~/.nekode/sessions/`. The menubar app watches that directory. That's the entire architecture. `nekode wait` writes the same JSON format. Any tool that writes a conforming JSON file gets a session card and a pet for free.
 
 ---
 
 ## Supports
 
-- **Claude Code** — via shell hook (`cathook`), tracks every lifecycle event
+- **Claude Code** — via shell hook (`nekode hook`), tracks every lifecycle event
 - **opencode** — via JS plugin running in Bun, zero dependencies
-- **Any CLI command** — via `catwait` pipe
+- **Any CLI command** — via `nekode wait` pipe
 
 Works with VS Code, Cursor, iTerm2, Kitty, Warp, and any macOS terminal.
 
@@ -58,8 +58,8 @@ Works with VS Code, Cursor, iTerm2, Kitty, Warp, and any macOS terminal.
 ## Install
 
 ```bash
-brew tap jakobserlier/catassistant
-brew install --cask catassistant
+brew tap jakobserlier/nekode
+brew install --cask nekode
 ```
 
 Signed and notarized by Apple. Follow the in-app instructions to connect Claude Code and/or opencode. Two minutes to set up.
@@ -74,7 +74,7 @@ No network access. No accounts. No cloud. Session data is plain JSON files on yo
 
 ## Name
 
-The project was originally called **cctop** (from "Claude Code top", like `htop` for AI sessions). It was renamed to **CatAssistant** — agent-agnostic, leans into the desktop pets angle (the most distinctive feature), and more brandable for a product page or Product Hunt launch.
+The project was originally called **cctop** (from "Claude Code top", like `htop` for AI sessions). It was renamed to **Nekode** — agent-agnostic, leans into the desktop pets angle (the most distinctive feature), and more brandable for a product page or Product Hunt launch.
 
 ---
 
@@ -116,4 +116,4 @@ The project was originally called **cctop** (from "Claude Code top", like `htop`
 
 The worst outcome is spending weeks on Paddle integration and selling 50 licenses. The best outcome is that the desktop pets go mildly viral, thousands of developers install it, and the $9.99 converts at 5-10% — meaningful side income from a product you'd maintain anyway. The expected outcome is somewhere in between, and worth the 2-3 days.
 
-**One more thing:** the `catwait` angle is underexplored. "Pipe any command, get a desktop pet that tells you when it's done" is a standalone product pitch that appeals to every developer, not just AI agent users. Consider leading with that in marketing, even if the AI session monitoring is the deeper feature.
+**One more thing:** the `nekode wait` angle is underexplored. "Pipe any command, get a desktop pet that tells you when it's done" is a standalone product pitch that appeals to every developer, not just AI agent users. Consider leading with that in marketing, even if the AI session monitoring is the deeper feature.

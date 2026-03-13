@@ -1,6 +1,6 @@
 # Distribution & Installation
 
-How CatAssistant gets to users, what's set up, what's not, and what to do next.
+How Nekode gets to users, what's set up, what's not, and what to do next.
 
 ## Current State
 
@@ -11,17 +11,17 @@ The build pipeline is complete: CI builds both architectures (arm64 + x86_64), c
 ### 1. Homebrew Cask (primary — not yet live)
 
 ```bash
-brew tap jakobserlier/catassistant
-brew install --cask catassistant
+brew tap jakobserlier/nekode
+brew install --cask nekode
 ```
 
-**Why this matters:** Homebrew is the standard macOS package manager. Most developers already have it. One command to install, one to update, one to uninstall. The cask also symlinks `cathook` into the user's PATH automatically.
+**Why this matters:** Homebrew is the standard macOS package manager. Most developers already have it. One command to install, one to update, one to uninstall. The cask also symlinks `nekode` into the user's PATH automatically.
 
 **Status:** Template exists at `packaging/homebrew-cask.rb`. CI job to push it exists in `.github/workflows/release.yml`. Needs the tap repo created and a signed release.
 
 ### 2. GitHub Releases (direct download)
 
-Users download `catassistant-macOS-arm64.zip` or `catassistant-macOS-x86_64.zip` from the releases page, unzip, and drag to `/Applications`.
+Users download `nekode-macOS-arm64.zip` or `nekode-macOS-x86_64.zip` from the releases page, unzip, and drag to `/Applications`.
 
 **Status:** CI creates zips and DMGs and uploads them. Works today for unsigned builds (users must right-click → Open).
 
@@ -34,10 +34,10 @@ A standard drag-to-Applications DMG. Created by `scripts/create-dmg.sh`. Uploade
 ### 4. Build from source
 
 ```bash
-git clone https://github.com/jakobserlier/catassistant.git
-cd catassistant
+git clone https://github.com/jakobserlier/nekode.git
+cd nekode
 ./scripts/bundle-macos.sh
-cp -R dist/CatAssistant.app /Applications/
+cp -R dist/Nekode.app /Applications/
 ```
 
 **Status:** Works. Requires Xcode 16+.
@@ -48,13 +48,30 @@ Once installed, the app checks `appcast.xml` in this repo for new versions and o
 
 **Status:** Integrated. Needs signed builds to work properly (Sparkle verifies EdDSA signatures).
 
+### 5. Shell one-liner
+
+```bash
+curl -fsSL https://nekode.dev/install.sh | bash
+```
+
+Downloads the latest release zip for the user's architecture, extracts `Nekode.app` to `/Applications`, and symlinks the `nekode` CLI to `/usr/local/bin`.
+
+**Options (environment variables):**
+
+| Variable | Default | Description |
+|---|---|---|
+| `NEKODE_VERSION` | latest | Pin a specific version (e.g. `v0.9.0`) |
+| `NEKODE_NO_CLI` | — | Set to `1` to skip CLI symlink |
+| `NEKODE_INSTALL_DIR` | `/Applications` | Override app install directory |
+
+**Status:** Script at `scripts/install.sh`. Needs to be hosted at `nekode.dev/install.sh` (copy to website public dir or serve via redirect). Same signing caveat as direct download.
+
 ### Other options to consider later
 
 | Method | Effort | Audience | Notes |
 |---|---|---|---|
 | **Homebrew core** | High | Broad | Requires upstream PR to `homebrew-cask`. Only worth it at significant adoption. They have strict review. |
-| **Mac App Store** | High | Non-technical | Requires App Sandbox (currently disabled), paid Apple Developer account, App Store review. CatAssistant uses filesystem watching and terminal automation — sandbox restrictions would require significant refactoring. Not worth it now. |
-| **curl one-liner** | Low | Power users | `curl -fsSL https://... \| bash` — easy to add, just a shell script that downloads the zip and moves the app. Risky perception (piping to bash). |
+| **Mac App Store** | High | Non-technical | Requires App Sandbox (currently disabled), paid Apple Developer account, App Store review. Nekode uses filesystem watching and terminal automation — sandbox restrictions would require significant refactoring. Not worth it now. |
 | **Nix / nixpkgs** | Medium | Nix users | Niche but loyal audience. Can add later if there's demand. |
 | **MacPorts** | Medium | MacPorts users | Very small audience compared to Homebrew. Skip unless requested. |
 
@@ -64,7 +81,7 @@ Once installed, the app checks `appcast.xml` in this repo for new versions and o
 
 - **Developer ID certificate** — signs the app so macOS Gatekeeper trusts it
 - **Notarization** — Apple scans the binary and issues a ticket; macOS verifies it on first launch
-- Without these, users see "CatAssistant can't be opened because Apple cannot check it for malicious software" and must right-click → Open
+- Without these, users see "Nekode can't be opened because Apple cannot check it for malicious software" and must right-click → Open
 
 ### Cost
 
@@ -95,26 +112,26 @@ Ship unsigned first via Homebrew to validate the distribution pipeline end-to-en
 
 ### Step 1: Create the tap repo
 
-Create a **public** GitHub repo named `jakobserlier/homebrew-catassistant`.
+Create a **public** GitHub repo named `jakobserlier/homebrew-nekode`.
 
 ```bash
-gh repo create jakobserlier/homebrew-catassistant --public --clone
-cd homebrew-catassistant
+gh repo create jakobserlier/homebrew-nekode --public --clone
+cd homebrew-nekode
 mkdir Casks
-cp /path/to/agent-hud/packaging/homebrew-cask.rb Casks/catassistant.rb
+cp /path/to/agent-hud/packaging/homebrew-cask.rb Casks/nekode.rb
 git add . && git commit -m "Initial cask formula" && git push
 ```
 
-The naming convention `homebrew-<name>` is required — it's how `brew tap jakobserlier/catassistant` resolves to the correct repo.
+The naming convention `homebrew-<name>` is required — it's how `brew tap jakobserlier/nekode` resolves to the correct repo.
 
 ### Step 2: Create a GitHub PAT for CI
 
 1. Go to https://github.com/settings/tokens?type=beta (fine-grained tokens)
 2. Create token:
-   - Name: `catassistant-tap-updater`
-   - Repository access: Only `jakobserlier/homebrew-catassistant`
+   - Name: `nekode-tap-updater`
+   - Repository access: Only `jakobserlier/homebrew-nekode`
    - Permissions: Contents → Read and write
-3. Add it as a secret named `TAP_GITHUB_TOKEN` on the `catassistant` (source) repo
+3. Add it as a secret named `TAP_GITHUB_TOKEN` on the `nekode` (source) repo
 
 ### Step 3: Tag a release
 
@@ -133,30 +150,30 @@ The CI will:
 ### Step 4: Verify
 
 ```bash
-brew tap jakobserlier/catassistant
-brew install --cask catassistant
-open /Applications/CatAssistant.app
-which cathook  # should be symlinked
+brew tap jakobserlier/nekode
+brew install --cask nekode
+open /Applications/Nekode.app
+which nekode  # should be symlinked
 ```
 
 ## Architecture
 
 ```
-jakobserlier/catassistant          (source repo)
+jakobserlier/nekode                (source repo)
   ├── CI builds + signs + notarizes
   ├── Uploads zips/DMGs to GitHub Releases
   ├── Computes SHA256 → pushes cask to tap repo
   └── Updates appcast.xml for Sparkle
 
-jakobserlier/homebrew-catassistant (tap repo)
-  └── Casks/catassistant.rb        (single file, auto-updated by CI)
+jakobserlier/homebrew-nekode       (tap repo)
+  └── Casks/nekode.rb              (single file, auto-updated by CI)
 
 User:
-  brew tap jakobserlier/catassistant
-  brew install --cask catassistant
+  brew tap jakobserlier/nekode
+  brew install --cask nekode
   → downloads zip from GitHub Releases
-  → extracts CatAssistant.app to /Applications
-  → symlinks cathook to /usr/local/bin (or /opt/homebrew/bin)
+  → extracts Nekode.app to /Applications
+  → symlinks nekode to /usr/local/bin (or /opt/homebrew/bin)
 ```
 
 ## Files in this repo
@@ -165,6 +182,7 @@ User:
 |---|---|
 | `packaging/homebrew-cask.rb` | Cask template (version + SHA256 placeholders) |
 | `scripts/bundle-macos.sh` | Builds .app bundle + zip |
+| `scripts/install.sh` | curl one-liner installer (downloads release + installs) |
 | `scripts/sign-and-notarize.sh` | Signs + notarizes (needs Apple Developer secrets) |
 | `scripts/create-dmg.sh` | Creates DMG installer |
 | `scripts/bump-version.sh` | Updates version in cask + all other locations |

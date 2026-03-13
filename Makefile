@@ -1,4 +1,4 @@
-PROJECT = menubar/CatAssistant.xcodeproj
+PROJECT = menubar/Nekode.xcodeproj
 DERIVED = menubar/build
 SIGN = CODE_SIGN_IDENTITY="-"
 
@@ -7,30 +7,27 @@ SIGN = CODE_SIGN_IDENTITY="-"
 all: lint build test
 
 build:
-	xcodebuild build -project $(PROJECT) -scheme CatAssistant -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
-	xcodebuild build -project $(PROJECT) -scheme cathook -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
-	xcodebuild build -project $(PROJECT) -scheme catwait -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
-	mkdir -p $(DERIVED)/Build/Products/Debug/CatAssistant.app/Contents/Resources
-	cp plugins/opencode/plugin.js $(DERIVED)/Build/Products/Debug/CatAssistant.app/Contents/Resources/opencode-plugin.js
-	cp plugins/copilot/hooks/hooks.json $(DERIVED)/Build/Products/Debug/CatAssistant.app/Contents/Resources/copilot-hooks.json
-	cp plugins/copilot/hooks/run-hook.sh $(DERIVED)/Build/Products/Debug/CatAssistant.app/Contents/Resources/copilot-run-hook.sh
+	xcodebuild build -project $(PROJECT) -scheme Nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
+	xcodebuild build -project $(PROJECT) -scheme nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
+	mkdir -p $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources
+	cp plugins/opencode/plugin.js $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/opencode-plugin.js
+	cp plugins/copilot/hooks/hooks.json $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-hooks.json
+	cp plugins/copilot/hooks/run-hook.sh $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-run-hook.sh
 
 test:
-	xcodebuild test -project $(PROJECT) -scheme CatAssistant -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
+	xcodebuild test -project $(PROJECT) -scheme Nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
 
 lint:
 	swiftlint lint --strict
 
 clean:
-	xcodebuild clean -project $(PROJECT) -scheme CatAssistant -derivedDataPath $(DERIVED)
+	xcodebuild clean -project $(PROJECT) -scheme Nekode -derivedDataPath $(DERIVED)
 	rm -rf $(DERIVED)
 
 install:
-	xcodebuild build -project $(PROJECT) -scheme cathook -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
-	xcodebuild build -project $(PROJECT) -scheme catwait -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
-	mkdir -p ~/.cat/bin
-	cp $(DERIVED)/Build/Products/Release/cathook ~/.cat/bin/cathook
-	cp $(DERIVED)/Build/Products/Release/catwait ~/.cat/bin/catwait
+	xcodebuild build -project $(PROJECT) -scheme nekode -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
+	mkdir -p ~/.nekode/bin
+	cp $(DERIVED)/Build/Products/Release/nekode ~/.nekode/bin/nekode
 
 run: build
-	open $(DERIVED)/Build/Products/Debug/CatAssistant.app
+	open $(DERIVED)/Build/Products/Debug/Nekode.app

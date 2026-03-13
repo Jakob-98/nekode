@@ -4,7 +4,7 @@ enabledWorkflows:
   - macos
   - ui-automation
 sessionDefaults:
-  projectPath: /Users/jakobserlier/projects/catassistant/menubar/CatAssistant.xcodeproj
-  scheme: CatAssistant
+  projectPath: /Users/jakobserlier/projects/nekode/menubar/Nekode.xcodeproj
+  scheme: Nekode
   configuration: Debug
-  derivedDataPath: /Users/jakobserlier/projects/catassistant/menubar/build
+  derivedDataPath: /Users/jakobserlier/projects/nekode/menubar/build

@@ -2,7 +2,7 @@
 import { execFileSync } from "child_process";
 import { closeMainWindow, popToRoot } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { CatSession } from "./types";
+import { NekodeSession } from "./types";
 
 /**
  * Extract the iTerm2 GUID from a terminal session ID string.
@@ -54,7 +54,7 @@ function buildITermScript(guid: string): string {
  * Return a human-readable label for the terminal program.
  * Used for contextual action labels like "Open in VS Code".
  */
-export function getTerminalLabel(session: CatSession): string {
+export function getTerminalLabel(session: NekodeSession): string {
   const program = session.terminal?.program?.toLowerCase() ?? "";
   if (program.includes("cursor")) return "Cursor";
   if (program.includes("windsurf")) return "Windsurf";
@@ -70,7 +70,7 @@ export function getTerminalLabel(session: CatSession): string {
  * Focus the terminal/editor for a session, then dismiss Raycast.
  * Replicates the logic in FocusTerminal.swift:focusTerminal().
  */
-export async function jumpToSession(session: CatSession): Promise<void> {
+export async function jumpToSession(session: NekodeSession): Promise<void> {
   try {
     const program = session.terminal?.program?.toLowerCase() ?? "";
     const target = session.workspace_file ?? session.project_path;

@@ -1,9 +1,9 @@
 {
-  "name": "catassistant-opencode",
+  "name": "nekode-opencode",
   "version": "0.8.2",
-  "description": "CatAssistant session monitor plugin for opencode",
+  "description": "Nekode session monitor plugin for opencode",
   "main": "plugin.js",
   "license": "MIT",
   "author": "Jakob Serlier",
-  "repository": "https://github.com/jakobserlier/catassistant"
+  "repository": "https://github.com/jakobserlier/nekode"
 }

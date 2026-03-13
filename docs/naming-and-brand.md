@@ -28,36 +28,11 @@ A rename now (before Homebrew tap, before any real distribution) is essentially 
 
 ---
 
-## Naming Options
+## Chosen Name: Nekode
 
-### Tier 1: Strong candidates
+See the full analysis in the [Decision: Nekode](#decision-nekode) section below.
 
-| Name | Vibe | Notes |
-|---|---|---|
-| **Pochi** | Cute, distinctive, ownable | Already the internal mascot name. Japanese origin (common pet name). Short, memorable, globally pronounceable. `pochi.dev` or `getpochi.app` likely available. Works as both app name and CLI (`pochi wait`, `pochi hook`). Risk: obscure, no immediate meaning to English speakers. |
-| **Petcode** | Developer, clear | Combines the two core concepts. `petcode.dev` plausible. Clean for CLI (`petcode wait`). Risks feeling generic. |
-| **Critters** | Playful, plural | Implies multiple animals/species from day one. Casual tone. Good for CLI (`critters wait`). Common English word — domain availability may be hard. |
-| **Sidekick** | Functional, warm | Describes the role, not the form. Works if you move beyond animals entirely (robots, sprites, etc.). But overused in tech — many apps called Sidekick. |
-| **Neko** | Retro, developer-nostalgic | Direct reference to [Neko (1989)](https://en.wikipedia.org/wiki/Neko_(software)), the original desktop pet. Developers over 30 will recognize it. But it means "cat" in Japanese — same species-lock problem. |
-
-### Tier 2: Worth considering
-
-| Name | Vibe | Notes |
-|---|---|---|
-| **Watchpet** | Descriptive | "Watch" = monitoring + "pet" = mascot. Clear but not exciting. |
-| **Pixelpet** | Retro, literal | Describes the art style. Fun but limits you if you go 3D later. |
-| **Buddy** | Warm, generic | Clippy's friendlier cousin. Too generic for search/discoverability. |
-| **AgentPet** | Technical, niche | Only makes sense to AI agent users. Excludes the `catwait` audience. |
-| **Kompanion** | Playful misspelling | The K gives it character. But misspellings are a UX tax — people will search for "Companion" and not find you. |
-| **Deskpet** | Literal | Desktop + pet. Clear, forgettable. |
-
-### Tier 3: Creative/risky
-
-| Name | Vibe | Notes |
-|---|---|---|
-| **Shimeji** | Developer-nostalgic | Famous desktop pet app. But it's an existing active project — too close. |
-| **Tamagotchi** | Nostalgic | Trademarked. Cannot use. |
-| **Clippy** | Maximum nostalgia | See analysis below. |
+**Nekode** = Neko (desktop pet heritage) + Code (developer tool). Both halves instantly recognizable. Doesn't lock into cats. Works as CLI. Unique and ownable.
 
 ---
 
@@ -136,36 +111,136 @@ Reasons:
 
 ---
 
-## Recommendations
+## Decision: Nekode
 
-**Name:** Go with **Pochi** if you want something ownable and distinctive, or **Critters** if you want something immediately understood. Pochi is the bolder choice — it's unique, short, works great as a CLI name, and you already use it internally. The obscurity is a feature: it's a blank canvas that means whatever you make it mean.
+**Nekode** = Neko (cat / desktop pet heritage, 1989) + Code (developer tool)
 
-**Theme:** Direction A (keep cats, expand species later) with elements of C (lean into pixel-art nostalgia). The pixel-art desktop pet is your moat — no other developer tool has this. Don't dilute it by going "clean and minimal."
+### Why this wins
 
-**Clippy:** Reference it in marketing, never in the product name. Use the *concept* (ambient desktop companion that reacts to your work) without the *brand*.
+- Both halves are instantly recognizable to developers
+- References the original desktop pet lineage without using a trademarked name
+- Doesn't lock into cats — "neko" is the heritage, not the constraint. Dogs and hamsters under the Nekode brand feel natural
+- Short (3 syllables), unique, globally pronounceable
+- Natural English reading is "neh-code" which lands perfectly
+- Works as a CLI name: `nekode wait`, `nekode hook`
+- Sounds like it could be a real word (echoes "decode", "node", "mode")
 
-**Tagline candidates:**
-- "Desktop pets for your coding agents" (clear, descriptive)
-- "Your agents are working. Your pets are watching." (personality)
-- "See all your AI sessions. Pet included." (casual, intriguing)
-- "Know when your agents need you — without watching them." (functional)
-- "The desktop pets your terminal deserves." (catwait-first angle)
+### Domain strategy
 
-**CLI naming (if Pochi):**
-- `pochi` (main app)
-- `pochi wait` or `pochiwait` (replaces `catwait`)
-- `pochi hook` or `pochihook` (replaces `cathook`)
+- `nekode.dev` — best option (check availability). `.dev` is the natural home for developer tools
+- `nekode.app` — second choice, Apple/macOS association
+- `getnekode.com` — fallback using the proven `get` prefix pattern
+- `.net` and `.org` are available but skip them — they signal "taken" not "developer tool"
 
-**CLI naming (if Critters):**
-- `critters` (main app)
-- `critters wait` or `crwait` (replaces `catwait`)
-- Hook binary stays internal
+### CLI naming
 
-**Next steps:**
-1. Pick a name
-2. Check domain availability (`{name}.dev`, `{name}.app`, `get{name}.com`)
-3. Check npm/brew/GitHub availability
-4. Rename repo, bundle ID, CLI binaries
-5. Create Homebrew tap under new name
+| Current | Nekode |
+|---|---|
+| CatAssistant.app | Nekode.app |
+| `cathook` | `nekode hook` or `nekohook` |
+| `catwait` | `nekode wait` or `nekowait` |
+| `~/.cat/sessions/` | `~/.nekode/sessions/` |
+| `com.jakobserlier.CatAssistant` | `dev.nekode.app` (or `com.nekode.app`) |
+| `jakobserlier/catassistant` | `jakobserlier/nekode` (or `nekode/nekode`) |
+| `jakobserlier/homebrew-catassistant` | `jakobserlier/homebrew-nekode` |
+| `brew install --cask catassistant` | `brew install --cask nekode` |
+
+### Rename scope
+
+Full list of what needs updating (do NOT do yet — do after domain is secured):
+
+**Code & config:**
+- Xcode project: target names, bundle identifier, product names
+- `Info.plist`: app name, Sparkle feed URL
+- `scripts/bump-version.sh`: all 7+ version locations need path updates
+- `scripts/bundle-macos.sh`: output names, paths
+- `scripts/sign-and-notarize.sh`: bundle references
+- `scripts/create-dmg.sh`: DMG naming
+- `scripts/generate-appcast.sh`: URLs, paths
+- `Makefile`: build paths, install paths
+- `packaging/homebrew-cask.rb`: cask name, URLs, paths
+- `appcast.xml`: feed URLs
+
+**CLI binaries:**
+- `cathook` target → `nekohook` (or keep as single `nekode` binary with subcommands)
+- `catwait` target → `nekowait` (or `nekode wait`)
+- `~/.cat/` → `~/.nekode/` (session data directory)
+- All plugins that reference `~/.cat/` or `cathook`
+
+**Plugins:**
+- `plugins/catassistant/` → `plugins/nekode/`
+- `plugins/opencode/opencode-plugin.js`: session path references
+- `plugins/copilot/`: hook paths
+- `.claude-plugin/`: plugin name, marketplace metadata
+
+**GitHub:**
+- Rename repo `catassistant` → `nekode`
+- Create `homebrew-nekode` tap repo (instead of `homebrew-catassistant`)
+- Update all workflow URLs
+
+**Marketing/docs:**
+- `README.md`
+- `docs/release-checklist.md`
+- `docs/distribution.md`
+- Landing page / product page copy
+- Appcast feed URL in Info.plist
+
+### Tagline candidates
+
+- "Desktop pets for your coding agents"
+- "Your agents are working. Your pets are watching."
+- "See all your AI sessions. Pet included."
+- "The desktop pets your terminal deserves."
+- "Remember Clippy? This is what it should have been." (for marketing copy, not tagline)
+
+### What stays the same
+
+- **Pochi** remains the flagship mascot name (the cat character). Nekode is the product, Pochi is the pet.
+- Teal brand color
+- Pixel-art aesthetic
+- All animation/behavior code — no functional changes
+- MIT license model
+- Monetization plan ($9.99 one-time)
+
+---
+
+## Previous Candidates (for reference)
+
+**Tier 1:**
+
+| Name | Vibe | Notes |
+|---|---|---|
+| **Pochi** | Cute, distinctive, ownable | Already the internal mascot name. Japanese origin. Short, memorable. Risk: obscure to English speakers. |
+| **Petcode** | Developer, clear | Combines the two core concepts. Risks feeling generic. |
+| **Critters** | Playful, plural | Implies multi-species from day one. Domain availability likely hard. |
+| **Sidekick** | Functional, warm | Works beyond animals. Overused in tech. |
+| **Neko** | Retro, nostalgic | References the 1989 desktop pet. Still means "cat" — same species-lock. |
+
+**Tier 2:** Watchpet, Pixelpet, Buddy, AgentPet, Kompanion, Deskpet — all considered and rejected for various reasons (generic, limiting, or hard to discover).
+
+---
+
+## Theme & Species Strategy
+
+**Theme:** Direction A (pixel-art animals, expand species over time) with nostalgia elements. The pixel-art desktop pet is the moat. Nekode's name carries the retro heritage; the product itself leans into it.
+
+**Clippy:** Reference in marketing copy ("Clippy-style desktop pets for AI coding sessions"), never in the product name. Microsoft actively enforces the trademark.
+
+**Species timeline:**
+1. **Launch:** Pochi cat (6 color variants, 18 animation states) — already built
+2. **v1.1:** First non-cat species (dog) — marketing moment ("Dogs just dropped")
+3. **Later:** More species as demand/art pipeline allows. Consider 3D pipeline (Tripo → Mixamo → USDZ) to eliminate per-species sprite art bottleneck
+
+**Don't add new animals before launch.** Each species needs ~288 hand-drawn frames. Pochi's 6 color variants handle 6 concurrent sessions. New species are better as post-launch marketing events.
+
+---
+
+## Next Steps
+
+1. Secure domain (`nekode.dev` preferred, then `nekode.app`, then `getnekode.com`)
+2. Check GitHub org/username availability for `nekode`
+3. Rename GitHub repo
+4. Execute the full rename (see scope above)
+5. Create `homebrew-nekode` tap repo
 6. Ship first Homebrew release
-7. Add first non-cat species as a post-launch update
+7. Add first non-cat species post-launch

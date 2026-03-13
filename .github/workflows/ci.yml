@@ -27,22 +27,22 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: menubar/build/
-          key: deriveddata-${{ runner.os }}-${{ hashFiles('menubar/CatAssistant.xcodeproj/**') }}
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('menubar/Nekode.xcodeproj/**') }}
           restore-keys: |
             deriveddata-${{ runner.os }}-
       - name: Build menubar app
-        run: xcodebuild build -project menubar/CatAssistant.xcodeproj -scheme CatAssistant -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
-      - name: Build cathook CLI
-        run: xcodebuild build -project menubar/CatAssistant.xcodeproj -scheme cathook -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
-      - name: Smoke test cathook
+        run: xcodebuild build -project menubar/Nekode.xcodeproj -scheme Nekode -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
+      - name: Build nekode CLI
+        run: xcodebuild build -project menubar/Nekode.xcodeproj -scheme nekode -configuration Debug -derivedDataPath menubar/build/ CODE_SIGN_IDENTITY="-"
+      - name: Smoke test nekode hook
         run: |
           SMOKE_DIR=$(mktemp -d)
           echo '{"session_id":"ci-test","cwd":"/tmp/proj","hook_event_name":"SessionStart"}' \
-            | CAT_SESSIONS_DIR="$SMOKE_DIR" menubar/build/Build/Products/Debug/cathook SessionStart
+            | NEKODE_SESSIONS_DIR="$SMOKE_DIR" menubar/build/Build/Products/Debug/nekode hook SessionStart
           SESSION_FILE=$(ls "$SMOKE_DIR"/*.json | head -1)
           test -f "$SESSION_FILE"
           grep -q '"idle"' "$SESSION_FILE"
           grep -q '"ci-test"' "$SESSION_FILE"
           rm -rf "$SMOKE_DIR"
       - name: Test
-        run: xcodebuild test -project menubar/CatAssistant.xcodeproj -scheme CatAssistant -configuration Debug -derivedDataPath menubar/build/
+        run: xcodebuild test -project menubar/Nekode.xcodeproj -scheme Nekode -configuration Debug -derivedDataPath menubar/build/

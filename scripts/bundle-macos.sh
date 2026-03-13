@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# bundle-macos.sh - Build and bundle CatAssistant.app (Swift-only)
+# bundle-macos.sh - Build and bundle Nekode.app (Swift-only)
 #
 # Usage:
 #   ./scripts/bundle-macos.sh                  # Build and bundle (release)
 #   ./scripts/bundle-macos.sh --skip-build     # Bundle from existing release binaries
 #   ./scripts/bundle-macos.sh --arch arm64     # Build for specific architecture
 #
-# Output: dist/CatAssistant.app, dist/catassistant-macOS.zip
+# Output: dist/Nekode.app, dist/nekode-macOS.zip
 
 SKIP_BUILD=false
 ARCH=""
@@ -28,30 +28,20 @@ BUILD_DIR="$REPO_ROOT/dist"
 XCODE_ARCHS="${ARCH:-$(uname -m)}"
 
 if [ "$SKIP_BUILD" = false ]; then
-    echo "==> Building CatAssistant app..."
+    echo "==> Building Nekode app..."
     xcodebuild build \
-        -project "$REPO_ROOT/menubar/CatAssistant.xcodeproj" \
-        -scheme CatAssistant \
+        -project "$REPO_ROOT/menubar/Nekode.xcodeproj" \
+        -scheme Nekode \
         -configuration Release \
         -derivedDataPath "$REPO_ROOT/menubar/build/" \
         CODE_SIGN_IDENTITY="-" \
         ARCHS="$XCODE_ARCHS" \
         ONLY_ACTIVE_ARCH=NO
 
-    echo "==> Building cathook CLI..."
+    echo "==> Building nekode CLI..."
     xcodebuild build \
-        -project "$REPO_ROOT/menubar/CatAssistant.xcodeproj" \
-        -scheme cathook \
-        -configuration Release \
-        -derivedDataPath "$REPO_ROOT/menubar/build/" \
-        CODE_SIGN_IDENTITY="-" \
-        ARCHS="$XCODE_ARCHS" \
-        ONLY_ACTIVE_ARCH=NO
-
-    echo "==> Building catwait CLI..."
-    xcodebuild build \
-        -project "$REPO_ROOT/menubar/CatAssistant.xcodeproj" \
-        -scheme catwait \
+        -project "$REPO_ROOT/menubar/Nekode.xcodeproj" \
+        -scheme nekode \
         -configuration Release \
         -derivedDataPath "$REPO_ROOT/menubar/build/" \
         CODE_SIGN_IDENTITY="-" \
@@ -63,14 +53,11 @@ echo "==> Assembling .app bundle..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-APP="$BUILD_DIR/CatAssistant.app"
-cp -R "$REPO_ROOT/menubar/build/Build/Products/Release/CatAssistant.app" "$APP"
+APP="$BUILD_DIR/Nekode.app"
+cp -R "$REPO_ROOT/menubar/build/Build/Products/Release/Nekode.app" "$APP"
 
-# Copy cathook into the app bundle
-cp "$REPO_ROOT/menubar/build/Build/Products/Release/cathook" "$APP/Contents/MacOS/cathook"
-
-# Copy catwait into the app bundle
-cp "$REPO_ROOT/menubar/build/Build/Products/Release/catwait" "$APP/Contents/MacOS/catwait"
+# Copy nekode CLI into the app bundle
+cp "$REPO_ROOT/menubar/build/Build/Products/Release/nekode" "$APP/Contents/MacOS/nekode"
 
 # Copy opencode plugin into Resources
 mkdir -p "$APP/Contents/Resources"
@@ -89,17 +76,13 @@ while IFS= read -r -d '' nested; do
     codesign --force --sign - "$nested"
 done < <(find "$APP/Contents" -depth \( -name "*.bundle" -o -name "*.framework" -o -name "*.xpc" -o -name "*.app" -o -name "*.appex" -o -name "*.dylib" \) -print0)
 
-# Sign cathook
-echo "  Signing cathook..."
-codesign --force --sign - "$APP/Contents/MacOS/cathook"
-
-# Sign catwait
-echo "  Signing catwait..."
-codesign --force --sign - "$APP/Contents/MacOS/catwait"
+# Sign nekode CLI
+echo "  Signing nekode..."
+codesign --force --sign - "$APP/Contents/MacOS/nekode"
 
 # Sign main executable
-echo "  Signing CatAssistant..."
-codesign --force --sign - "$APP/Contents/MacOS/CatAssistant"
+echo "  Signing Nekode..."
+codesign --force --sign - "$APP/Contents/MacOS/Nekode"
 
 # Sign the overall bundle
 echo "  Signing app bundle..."
@@ -107,9 +90,9 @@ codesign --force --sign - "$APP"
 
 echo "==> Packaging..."
 cd "$BUILD_DIR"
-ditto -c -k --sequesterRsrc --keepParent CatAssistant.app catassistant-macOS.zip
+ditto -c -k --sequesterRsrc --keepParent Nekode.app nekode-macOS.zip
 
-SIZE=$(du -sh CatAssistant.app | cut -f1)
+SIZE=$(du -sh Nekode.app | cut -f1)
 echo "==> Done! App size: $SIZE"
 echo "   App:  $APP"
-echo "   Zip:  $BUILD_DIR/catassistant-macOS.zip"
+echo "   Zip:  $BUILD_DIR/nekode-macOS.zip"

@@ -340,13 +340,13 @@ function App() {
       <nav className="nav">
         <div className="nav-inner">
           <div className="nav-brand">
-            <img src="/app-icon.png" alt="CatAssistant" className="nav-icon" />
-            <span className="nav-name">CatAssistant</span>
+            <img src="/app-icon.png" alt="Nekode" className="nav-icon" />
+            <span className="nav-name">Nekode</span>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#pricing">Pricing</a>
-            <a href="https://github.com/jakobserlier/catassistant" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/jakobserlier/nekode" target="_blank" rel="noopener">GitHub</a>
             <a href="#pricing" className="nav-cta">Get It</a>
           </div>
         </div>
@@ -366,9 +366,9 @@ function App() {
           </p>
           <div className="hero-actions">
             <a href="#pricing" className="btn btn-primary">
-              Get CatAssistant &mdash; &euro;9.99
+              Get Nekode &mdash; &euro;9.99
             </a>
-            <a href="https://github.com/jakobserlier/catassistant/releases" className="btn btn-secondary" target="_blank" rel="noopener">
+            <a href="https://github.com/jakobserlier/nekode/releases" className="btn btn-secondary" target="_blank" rel="noopener">
               Download Free Trial
             </a>
           </div>
@@ -430,13 +430,13 @@ function App() {
           />
           <FeatureCard
             icon="|"
-            title="catwait CLI"
-            description="Pipe any command through catwait. Your cat monitors the build and tells you when it's done. cargo build | catwait"
+            title="nekode wait CLI"
+            description="Pipe any command through nekode wait. Your cat monitors the build and tells you when it's done. cargo build | nekode"
           />
           <FeatureCard
             icon="#"
             title="Fully Private"
-            description="Zero network access. Zero analytics. Zero telemetry. All data stays in ~/.cat/sessions/ as plain JSON."
+            description="Zero network access. Zero analytics. Zero telemetry. All data stays in ~/.nekode/sessions/ as plain JSON."
           />
           <FeatureCard
             icon="*"
@@ -457,14 +457,14 @@ function App() {
             <div className="step-number">1</div>
             <h3>Install the hooks</h3>
             <p>
-              <code>cathook</code> for Claude Code, a JS plugin for opencode, or <code>catwait</code> for any CLI command.
+              <code>nekode hook</code> for Claude Code, a JS plugin for opencode, or <code>nekode wait</code> for any CLI command.
             </p>
           </div>
           <div className="how-step">
             <div className="step-number">2</div>
             <h3>Sessions appear</h3>
             <p>
-              Hooks write JSON to <code>~/.cat/sessions/</code>. The menubar app watches this directory. That's it.
+              Hooks write JSON to <code>~/.nekode/sessions/</code>. The menubar app watches this directory. That's it.
             </p>
           </div>
           <div className="how-step">
@@ -489,7 +489,7 @@ function App() {
             <StatusBadges />
           </div>
           <div className="statuses-visual">
-            <img src="/menubar-dark.png" alt="CatAssistant menubar panel" className="screenshot" />
+            <img src="/menubar-dark.png" alt="Nekode menubar panel" className="screenshot" />
           </div>
         </div>
       </section>
@@ -518,7 +518,7 @@ function App() {
             <li>Full app with all features</li>
             <li>Desktop pets (6 cat colors)</li>
             <li>Claude Code, opencode &amp; Copilot support</li>
-            <li>catwait CLI for any command</li>
+            <li>nekode wait CLI for any command</li>
             <li>Raycast extension included</li>
             <li>Free updates forever</li>
             <li>No subscription, no account needed</li>
@@ -527,7 +527,7 @@ function App() {
             Purchase License
           </button>
           <p className="pricing-note">
-            Or <a href="https://github.com/jakobserlier/catassistant/releases">download the free trial</a> &mdash; full functionality, gentle nag banner.
+            Or <a href="https://github.com/jakobserlier/nekode/releases">download the free trial</a> &mdash; full functionality, gentle nag banner.
           </p>
         </div>
       </section>
@@ -541,14 +541,20 @@ function App() {
           <div className="install-option">
             <h3>Homebrew</h3>
             <div className="code-snippet">
-              <code>brew tap jakobserlier/catassistant</code>
-              <code>brew install --cask catassistant</code>
+              <code>brew tap jakobserlier/nekode</code>
+              <code>brew install --cask nekode</code>
+            </div>
+          </div>
+          <div className="install-option">
+            <h3>Shell</h3>
+            <div className="code-snippet">
+              <code>curl -fsSL https://nekode.dev/install.sh | bash</code>
             </div>
           </div>
           <div className="install-option">
             <h3>Direct Download</h3>
-            <p>Signed and notarized by Apple. Download the <code>.dmg</code> from GitHub Releases.</p>
-            <a href="https://github.com/jakobserlier/catassistant/releases" className="btn btn-secondary btn-small" target="_blank" rel="noopener">
+            <p>Download the <code>.dmg</code> from GitHub Releases.</p>
+            <a href="https://github.com/jakobserlier/nekode/releases" className="btn btn-secondary btn-small" target="_blank" rel="noopener">
               GitHub Releases
             </a>
           </div>
@@ -559,13 +565,13 @@ function App() {
       <footer className="footer">
         <div className="footer-inner">
           <div className="footer-brand">
-            <img src="/app-icon.png" alt="CatAssistant" className="footer-icon" />
-            <span>CatAssistant</span>
+            <img src="/app-icon.png" alt="Nekode" className="footer-icon" />
+            <span>Nekode</span>
           </div>
           <div className="footer-links">
-            <a href="https://github.com/jakobserlier/catassistant" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://github.com/jakobserlier/catassistant/releases" target="_blank" rel="noopener">Releases</a>
-            <a href="https://github.com/jakobserlier/catassistant/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+            <a href="https://github.com/jakobserlier/nekode" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/jakobserlier/nekode/releases" target="_blank" rel="noopener">Releases</a>
+            <a href="https://github.com/jakobserlier/nekode/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
           </div>
           <p className="footer-copy">Built with questionable amounts of coffee and pixel art.</p>
         </div>

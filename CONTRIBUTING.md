@@ -1,9 +1,9 @@
-# Contributing to CatAssistant
+# Contributing to Nekode
 
-Thanks for your interest in contributing to CatAssistant! The project has three main components:
+Thanks for your interest in contributing to Nekode! The project has three main components:
 
-- **CatAssistant** - macOS menubar app (SwiftUI)
-- **cathook** - CLI hook handler for Claude Code (Swift, Xcode target)
+- **Nekode** - macOS menubar app (SwiftUI)
+- **nekode** - CLI binary with subcommands (`nekode hook`, `nekode wait`)
 - **opencode plugin** - JS plugin for opencode (`plugins/opencode/plugin.js`)
 
 The two Swift targets share model code in `Models/`. The opencode plugin is a standalone JS file with zero dependencies.
@@ -20,16 +20,16 @@ The two Swift targets share model code in `Models/`. The opencode plugin is a st
 ```bash
 # Menubar app
 xcodebuild build \
-  -project menubar/CatAssistant.xcodeproj \
-  -scheme CatAssistant \
+  -project menubar/Nekode.xcodeproj \
+  -scheme Nekode \
   -configuration Debug \
   -derivedDataPath menubar/build/ \
   CODE_SIGN_IDENTITY="-"
 
-# cathook CLI
+# nekode CLI
 xcodebuild build \
-  -project menubar/CatAssistant.xcodeproj \
-  -scheme cathook \
+  -project menubar/Nekode.xcodeproj \
+  -scheme nekode \
   -configuration Debug \
   -derivedDataPath menubar/build/ \
   CODE_SIGN_IDENTITY="-"
@@ -40,8 +40,8 @@ xcodebuild build \
 ```bash
 # Swift tests
 xcodebuild test \
-  -project menubar/CatAssistant.xcodeproj \
-  -scheme CatAssistant \
+  -project menubar/Nekode.xcodeproj \
+  -scheme Nekode \
   -configuration Debug \
   -derivedDataPath menubar/build/
 
@@ -58,16 +58,16 @@ swiftlint lint --strict
 
 ### Code Organization
 
-**Swift** (in `menubar/CatAssistant/`). Use Xcode or SwiftUI Previews for visual feedback -- all views have `#Preview` blocks with mock data.
+**Swift** (in `menubar/Nekode/`). Use Xcode or SwiftUI Previews for visual feedback -- all views have `#Preview` blocks with mock data.
 
 - `Models/` — Shared between both Swift targets (Session, SessionStatus, HookEvent, Config)
 - `Views/` — Menubar app only (SwiftUI views)
 - `Services/` — Menubar app only (SessionManager, FocusTerminal)
-- `Hook/` — cathook CLI only (HookMain, HookHandler, HookInput, HookLogger)
+- `Hook/` — nekode CLI only (HookMain, HookHandler, HookInput, HookLogger)
 
 **opencode plugin** (in `plugins/opencode/`). A single JS file that runs in-process in Bun.
 
-- `plugin.js` — Event handler that writes session JSON to `~/.cat/sessions/`
+- `plugin.js` — Event handler that writes session JSON to `~/.nekode/sessions/`
 - `package.json` — Plugin manifest (name, version)
 - Auto-installed by the menubar app on launch when `~/.config/opencode/` exists
 - No build step needed — edit `plugin.js` directly and use the manual copy below to test changes
@@ -78,16 +78,16 @@ The plugin is auto-installed by the menubar app on launch. For local development
 
 ```bash
 # Copy your modified plugin into the opencode plugins directory
-cp plugins/opencode/plugin.js ~/.config/opencode/plugins/catassistant.js
+cp plugins/opencode/plugin.js ~/.config/opencode/plugins/nekode.js
 
 # Restart opencode to pick up changes
 # (opencode loads plugins at startup — there's no hot reload)
 
 # Verify session files are written
-ls ~/.cat/sessions/
+ls ~/.nekode/sessions/
 
 # Check the session JSON contents
-cat ~/.cat/sessions/*.json | python3 -m json.tool
+cat ~/.nekode/sessions/*.json | python3 -m json.tool
 ```
 
 Note: Launching the menubar app will overwrite your local changes if the bundled plugin differs. Either quit the app while iterating, or use `make run` to build and launch with your latest changes bundled.
@@ -106,7 +106,7 @@ This updates `packaging/homebrew-cask.rb`, both plugin manifests (Claude Code an
 
 ## Reporting Issues
 
-Open an issue on [GitHub](https://github.com/jakobserlier/catassistant/issues). Include:
+Open an issue on [GitHub](https://github.com/jakobserlier/nekode/issues). Include:
 
 - What you expected vs. what happened
 - Steps to reproduce
