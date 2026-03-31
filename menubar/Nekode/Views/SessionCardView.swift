@@ -140,6 +140,7 @@ struct SessionCardView: View {
     }
 }
 
+#if DEBUG
 #Preview("Working") {
     SessionCardView(session: .mock(status: .working, lastTool: "Bash", lastToolDetail: "cargo test"))
         .frame(width: 300).padding()
@@ -202,3 +203,4 @@ struct SessionCardView: View {
     )
     .frame(width: 300).padding()
 }
+#endif

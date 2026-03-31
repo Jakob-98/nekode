@@ -124,6 +124,7 @@ struct PanelContentView: View {
 
 // MARK: - PopupView Previews
 
+#if DEBUG
 #Preview("With sessions") {
     PopupView(sessions: Session.mockSessions, updater: DisabledUpdater(), licenseManager: LicenseManager.shared).frame(width: 320)
 }
@@ -168,3 +169,4 @@ struct PanelContentView: View {
         isCompactModeEnabled: true
     ).frame(width: 320)
 }
+#endif

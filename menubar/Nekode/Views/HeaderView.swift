@@ -58,6 +58,7 @@ struct HeaderView: View {
     }
 }
 
+#if DEBUG
 #Preview("Normal") {
     HeaderView(sessions: Session.qaShowcase).frame(width: 320).padding()
 }
@@ -67,3 +68,4 @@ struct HeaderView: View {
 #Preview("Compact Tappable") {
     HeaderView(sessions: Session.qaShowcase, onTap: {}, isCompactMode: true).frame(width: 320).padding()
 }
+#endif

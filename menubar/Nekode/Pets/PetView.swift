@@ -350,6 +350,7 @@ struct PetNameTag: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("Pochi Sitting") {
     PetPreviewFactory.makePreview(status: .working, kind: .pochi)
 }
@@ -383,3 +384,4 @@ enum PetPreviewFactory {
         .background(.black.opacity(0.3))
     }
 }
+#endif

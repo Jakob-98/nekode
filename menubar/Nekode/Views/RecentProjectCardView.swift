@@ -54,6 +54,7 @@ struct RecentProjectCardView: View {
     }
 }
 
+#if DEBUG
 #Preview("Cursor project") {
     RecentProjectCardView(project: .mock(project: "billing-api", branch: "feature/invoices", editor: "Cursor"))
         .frame(width: 300).padding()
@@ -74,3 +75,4 @@ struct RecentProjectCardView: View {
     RecentProjectCardView(project: .mock(project: "side-project", sessionCount: 1))
         .frame(width: 300).padding()
 }
+#endif
