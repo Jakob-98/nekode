@@ -157,34 +157,40 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Check for signing key
+        id: check-key
         env:
           KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
         run: |
           if [ -z "$KEY" ]; then
             echo "::notice::SPARKLE_ED25519_PRIVATE_KEY not configured, skipping appcast update"
-            exit 1
+            echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        if: steps.check-key.outputs.skip != 'true'
         with:
           ref: main
           fetch-depth: 0
 
       - name: Download all artifacts
+        if: steps.check-key.outputs.skip != 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
 
       - name: Install Sparkle tools
+        if: steps.check-key.outputs.skip != 'true'
         run: brew install sparkle
 
       - name: Extract version from tag
+        if: steps.check-key.outputs.skip != 'true'
         id: version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Generate appcast
+        if: steps.check-key.outputs.skip != 'true'
         env:
           SPARKLE_ED25519_PRIVATE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
         run: |
@@ -194,6 +200,7 @@ jobs:
             artifacts/nekode-macOS-x86_64/nekode-macOS-x86_64.zip
 
       - name: Commit and push appcast
+        if: steps.check-key.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
