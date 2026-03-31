@@ -50,6 +50,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain-db
 
+          # Debug: list available signing identities
+          echo "==> Available signing identities:"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH || true
+          security find-identity -v -p codesigning || true
+
           ./scripts/sign-and-notarize.sh dist/Nekode.app
 
           # Re-create the zip with signed app
