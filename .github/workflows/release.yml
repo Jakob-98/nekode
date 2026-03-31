@@ -33,6 +33,7 @@ jobs:
         id: sign
         if: env.APPLE_IDENTITY != ''
         env:
+          APPLE_IDENTITY: ${{ secrets.APPLE_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
@@ -53,7 +54,11 @@ jobs:
           # Debug: list available signing identities
           echo "==> Available signing identities:"
           security find-identity -v -p codesigning $KEYCHAIN_PATH || true
-          security find-identity -v -p codesigning || true
+          echo "==> APPLE_IDENTITY length: ${#APPLE_IDENTITY}"
+          echo "==> Keychain search list:"
+          security list-keychains -d user
+          echo "==> Attempting direct codesign test:"
+          codesign --force --sign "$APPLE_IDENTITY" --timestamp=none /usr/bin/true 2>&1 || echo "(test sign failed, this is expected for /usr/bin/true)"
 
           ./scripts/sign-and-notarize.sh dist/Nekode.app
 
