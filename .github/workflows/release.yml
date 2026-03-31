@@ -12,6 +12,8 @@ jobs:
   build-macos:
     name: Build macOS (${{ matrix.arch }})
     runs-on: macos-15
+    env:
+      APPLE_IDENTITY: ${{ secrets.APPLE_IDENTITY }}
     strategy:
       matrix:
         include:
@@ -29,9 +31,8 @@ jobs:
 
       - name: Sign and notarize
         id: sign
-        if: secrets.APPLE_IDENTITY != ''
+        if: env.APPLE_IDENTITY != ''
         env:
-          APPLE_IDENTITY: ${{ secrets.APPLE_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
