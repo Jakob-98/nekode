@@ -180,18 +180,21 @@ echo "==> Creating zip for notarization..."
 NOTARIZE_ZIP="$(dirname "$APP_PATH")/nekode-notarize.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$NOTARIZE_ZIP"
 
-echo "==> Submitting for notarization..."
+echo "==> Submitting for notarization (timeout: 30min)..."
 SUBMIT_OUTPUT=$(xcrun notarytool submit "$NOTARIZE_ZIP" \
     --apple-id "$APPLE_ID" \
     --password "$APPLE_APP_PASSWORD" \
     --team-id "$APPLE_TEAM_ID" \
-    --wait 2>&1) || true
+    --wait --timeout 30m 2>&1) || true
 
 echo "$SUBMIT_OUTPUT"
 
 # Extract submission ID and check result
 SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep -m1 'id:' | awk '{print $2}')
-if echo "$SUBMIT_OUTPUT" | grep -q "status: Invalid"; then
+
+if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+    echo "==> Notarization accepted!"
+elif echo "$SUBMIT_OUTPUT" | grep -q "status: Invalid"; then
     echo "==> Notarization FAILED. Fetching log..."
     if [[ -n "$SUBMISSION_ID" ]]; then
         xcrun notarytool log "$SUBMISSION_ID" \
@@ -201,6 +204,37 @@ if echo "$SUBMIT_OUTPUT" | grep -q "status: Invalid"; then
     fi
     rm -f "$NOTARIZE_ZIP"
     exit 1
+else
+    # Timeout or network error — poll once more for status
+    echo "==> Notarization did not complete in time. Checking status..."
+    if [[ -n "$SUBMISSION_ID" ]]; then
+        STATUS_OUTPUT=$(xcrun notarytool info "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" 2>&1) || true
+        echo "$STATUS_OUTPUT"
+        if echo "$STATUS_OUTPUT" | grep -q "status: Accepted"; then
+            echo "==> Notarization accepted (delayed)!"
+        elif echo "$STATUS_OUTPUT" | grep -q "status: Invalid"; then
+            echo "==> Notarization FAILED (delayed). Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_APP_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID" || true
+            rm -f "$NOTARIZE_ZIP"
+            exit 1
+        else
+            echo "==> Notarization still in progress or status unknown."
+            echo "==> Submission ID: $SUBMISSION_ID"
+            echo "==> You can check manually: xcrun notarytool info $SUBMISSION_ID ..."
+            rm -f "$NOTARIZE_ZIP"
+            exit 1
+        fi
+    else
+        echo "==> No submission ID found. Notarization may have failed to submit."
+        rm -f "$NOTARIZE_ZIP"
+        exit 1
+    fi
 fi
 
 rm -f "$NOTARIZE_ZIP"
