@@ -7,7 +7,7 @@
 #   brew install --cask nekode
 #
 cask "nekode" do
-  version "1.0.2"
+  version "1.0.3"
 
   on_arm do
     url "https://github.com/Jakob-98/nekode/releases/download/v#{version}/nekode-macOS-arm64.zip"

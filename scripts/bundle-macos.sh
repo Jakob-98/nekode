@@ -68,6 +68,10 @@ cp "$REPO_ROOT/plugins/opencode/plugin.js" "$APP/Contents/Resources/opencode-plu
 cp "$REPO_ROOT/plugins/copilot/hooks/hooks.json" "$APP/Contents/Resources/copilot-hooks.json"
 cp "$REPO_ROOT/plugins/copilot/hooks/run-hook.sh" "$APP/Contents/Resources/copilot-run-hook.sh"
 
+# Copy copilot-cli hooks into Resources
+cp "$REPO_ROOT/plugins/copilot-cli/hooks/hooks.json" "$APP/Contents/Resources/copilot-cli-hooks.json"
+cp "$REPO_ROOT/plugins/copilot-cli/hooks/run-hook.sh" "$APP/Contents/Resources/copilot-cli-run-hook.sh"
+
 # Ad-hoc sign (innermost first — no --deep)
 echo "==> Signing app bundle..."
 

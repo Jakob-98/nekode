@@ -280,6 +280,10 @@ class PluginManager: ObservableObject {
     // MARK: - JSON Helpers
 
     private func loadJSONObject(from url: URL) throws -> [String: Any] {
+        // If the file doesn't exist yet (e.g. fresh VS Code install), start with empty object
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return [:]
+        }
         let data = try Data(contentsOf: url)
         // Strip comments and trailing commas for JSONC (VS Code settings format)
         let cleaned = Self.stripJSONC(data)
@@ -291,6 +295,9 @@ class PluginManager: ObservableObject {
 
     private func writeJSONObject(_ obj: [String: Any], to url: URL) throws {
         let data = try JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys])
+        // Ensure parent directory exists (e.g. fresh VS Code install)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
         try data.write(to: url, options: .atomic)
     }
 
