@@ -42,15 +42,14 @@ enum Transition {
         switch event {
         case .sessionStart: return .idle
         case .stop:
-            // VS Code Copilot and Copilot CLI don't send Notification hooks — Stop
-            // means the agent finished and is waiting for the user's next prompt
-            // (= waitingInput). For Claude Code (nil source), Stop means the user
-            // explicitly stopped, and a separate Notification(idle_prompt) event
-            // signals waiting for input.
+            // Stop means the agent finished and is waiting for the user's next prompt.
+            // For Copilot (no Notification hooks), this is waitingInput.
+            // For Claude Code, this is needsAttention — the user needs to look at results.
+            // Idle/sleeping should only happen via inactivity timeout, not from Stop.
             if SessionSource.resolve(source).isCopilotFamily { return .waitingInput }
-            return .idle
+            return .needsAttention
         case .userPromptSubmit, .preToolUse, .postToolUse: return .working
-        case .notificationIdle: return .waitingInput
+        case .notificationIdle: return .needsAttention
         case .notificationPermission, .permissionRequest: return .waitingPermission
         case .preCompact: return .compacting
         case .notificationOther, .sessionEnd, .unknown: return nil

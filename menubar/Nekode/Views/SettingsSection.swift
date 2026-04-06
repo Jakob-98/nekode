@@ -53,6 +53,9 @@ struct SettingsSection: View {
     @State private var copilotCLIJustInstalled = false
     @State private var copilotCLIInstallFailed = false
     @State private var copilotCLIRemoveHovered = false
+    @State private var ccJustInstalled = false
+    @State private var ccInstallFailed = false
+    @State private var ccRemoveHovered = false
     @State private var selectedTab: SettingsTab = .app
 
     private enum SettingsTab: String, CaseIterable {
@@ -106,7 +109,10 @@ struct SettingsSection: View {
                 copilotRemoveHovered: $copilotRemoveHovered,
                 copilotCLIJustInstalled: $copilotCLIJustInstalled,
                 copilotCLIInstallFailed: $copilotCLIInstallFailed,
-                copilotCLIRemoveHovered: $copilotCLIRemoveHovered
+                copilotCLIRemoveHovered: $copilotCLIRemoveHovered,
+                ccJustInstalled: $ccJustInstalled,
+                ccInstallFailed: $ccInstallFailed,
+                ccRemoveHovered: $ccRemoveHovered
             )
             Divider().padding(.horizontal, 14)
             VStack(alignment: .leading, spacing: 8) {
@@ -460,13 +466,16 @@ private struct MonitoredToolsView: View {
     @Binding var copilotCLIJustInstalled: Bool
     @Binding var copilotCLIInstallFailed: Bool
     @Binding var copilotCLIRemoveHovered: Bool
+    @Binding var ccJustInstalled: Bool
+    @Binding var ccInstallFailed: Bool
+    @Binding var ccRemoveHovered: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Monitored Tools")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.textSecondary)
-            toolRow(name: "Claude Code", installed: pluginManager.ccInstalled)
+            claudeCodeRow
             openCodeRow
             copilotRow
             copilotCLIRow
@@ -474,6 +483,73 @@ private struct MonitoredToolsView: View {
         .padding(.horizontal, 14)
         .padding(.top, 12)
         .padding(.bottom, 10)
+    }
+
+    private var claudeCodeRow: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                toolLabel("Claude Code")
+                Spacer()
+                if ccJustInstalled {
+                    EmptyView()
+                } else if pluginManager.ccInstalled {
+                    connectedBadge
+                    Button {
+                        if !pluginManager.removeClaudeCodePlugin() {
+                            flashCCFailed()
+                        }
+                    } label: {
+                        Text("Remove")
+                            .font(.system(size: 10))
+                            .foregroundStyle(ccRemoveHovered ? Color.primary : Color.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { ccRemoveHovered = $0 }
+                } else {
+                    ccInstallButton
+                }
+            }
+            if ccJustInstalled {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.green)
+                    Text("Installed \u{2014} restart Claude Code to activate")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.textMuted)
+                }
+                .transition(.opacity)
+            }
+            if ccInstallFailed {
+                Text("Failed \u{2014} check permissions")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.amber)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    private var ccInstallButton: some View {
+        Button {
+            if pluginManager.installClaudeCodePlugin() {
+                ccJustInstalled = true
+                ccInstallFailed = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    ccJustInstalled = false
+                }
+            } else {
+                flashCCFailed()
+            }
+        } label: {
+            Text("Connect")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.segmentActiveText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.amber)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+        .buttonStyle(.plain)
     }
 
     private var openCodeRow: some View {
@@ -695,6 +771,13 @@ private struct MonitoredToolsView: View {
         copilotInstallFailed = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             copilotInstallFailed = false
+        }
+    }
+
+    private func flashCCFailed() {
+        ccInstallFailed = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            ccInstallFailed = false
         }
     }
 
@@ -924,11 +1007,13 @@ private struct LicenseSection: View {
     override var canCheckForUpdates: Bool { true }
 }
 @MainActor private func previewPM(
-    cc: Bool = true, oc: Bool = false, ocConfig: Bool = false,
+    cc: Bool = true, ccExists: Bool = true,
+    oc: Bool = false, ocConfig: Bool = false,
     copilot: Bool = false, vscode: Bool = false
 ) -> PluginManager {
     let pm = PluginManager()
     pm.ccInstalled = cc
+    pm.ccExists = ccExists
     pm.ocInstalled = oc
     pm.ocConfigExists = ocConfig
     pm.copilotInstalled = copilot

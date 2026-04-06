@@ -11,7 +11,13 @@ func focusTerminal(session: Session) {
 
     let hostApp = HostApp.from(editorName: terminal.program)
 
-    if let cli = hostApp.cliCommand {
+    if let cli = hostApp.cliCommand, let bundleID = hostApp.bundleID {
+        // For editors: try to find and raise the correct window by project name.
+        // Running `code <path>` can open a new/wrong window when multiple windows exist.
+        if focusEditorWindow(bundleID: bundleID, projectName: session.projectName) {
+            return
+        }
+        // Fallback: use CLI to open the project (creates or focuses a window)
         let target = session.workspaceFile ?? session.projectPath
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -52,6 +58,42 @@ private func activateFrontmostTerminal() -> Bool {
             app.activate()
             return true
         }
+    }
+    return false
+}
+
+/// Try to focus an editor window whose title contains the project name.
+/// Uses AppleScript to iterate windows and raise the matching one.
+/// Returns true if a matching window was found and raised.
+private func focusEditorWindow(bundleID: String, projectName: String) -> Bool {
+    // Verify the app is running before invoking AppleScript
+    guard NSWorkspace.shared.runningApplications.contains(where: {
+        $0.bundleIdentifier == bundleID
+    }) else {
+        return false
+    }
+
+    // AppleScript: activate the app and raise the first window whose name contains projectName.
+    // Escape the project name for AppleScript string comparison.
+    let escaped = projectName
+        .replacingOccurrences(of: "\\", with: "\\\\")
+        .replacingOccurrences(of: "\"", with: "\\\"")
+
+    let script = """
+    tell application id "\(bundleID)"
+        activate
+        repeat with w in windows
+            if name of w contains "\(escaped)" then
+                set index of w to 1
+                return true
+            end if
+        end repeat
+    end tell
+    return false
+    """
+    var error: NSDictionary?
+    if let result = NSAppleScript(source: script)?.executeAndReturnError(&error) {
+        return result.booleanValue
     }
     return false
 }

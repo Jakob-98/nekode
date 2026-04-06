@@ -72,6 +72,9 @@ cp "$REPO_ROOT/plugins/copilot/hooks/run-hook.sh" "$APP/Contents/Resources/copil
 cp "$REPO_ROOT/plugins/copilot-cli/hooks/hooks.json" "$APP/Contents/Resources/copilot-cli-hooks.json"
 cp "$REPO_ROOT/plugins/copilot-cli/hooks/run-hook.sh" "$APP/Contents/Resources/copilot-cli-run-hook.sh"
 
+# Copy Claude Code hook script into Resources
+cp "$REPO_ROOT/plugins/nekode/hooks/run-hook.sh" "$APP/Contents/Resources/cc-run-hook.sh"
+
 # Ad-hoc sign (innermost first — no --deep)
 echo "==> Signing app bundle..."
 

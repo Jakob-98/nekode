@@ -2,10 +2,14 @@ import Foundation
 
 struct HookInput: Decodable {
     let sessionId: String
+    /// Working directory — may be absent for some hook sources (e.g. certain Copilot events).
+    /// Falls back to the process's current directory when missing.
     let cwd: String
     var transcriptPath: String?
     var permissionMode: String?
-    let hookEventName: String
+    /// Hook event name — present in Claude Code JSON, may be absent from Copilot CLI JSON
+    /// (in which case the event name comes from the CLI argument instead).
+    var hookEventName: String?
     var prompt: String?
     var toolName: String?
     var toolInput: [String: String]?
@@ -60,8 +64,9 @@ struct HookInput: Decodable {
 
         // Required fields — try camelCase first, then snake_case
         sessionId = try Self.decodeFirst(String.self, from: container, keys: ["sessionId", "session_id"])
-        cwd = try Self.decodeFirst(String.self, from: container, keys: ["cwd"])
-        hookEventName = try Self.decodeFirst(String.self, from: container, keys: ["hookEventName", "hook_event_name"])
+        cwd = Self.decodeFirstIfPresent(String.self, from: container, keys: ["cwd"])
+            ?? FileManager.default.currentDirectoryPath
+        hookEventName = Self.decodeFirstIfPresent(String.self, from: container, keys: ["hookEventName", "hook_event_name"])
 
         // Optional fields — try camelCase first, then snake_case
         transcriptPath = Self.decodeFirstIfPresent(String.self, from: container, keys: ["transcriptPath", "transcript_path"])

@@ -10,11 +10,13 @@ build:
 	xcodebuild build -project $(PROJECT) -scheme Nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
 	xcodebuild build -project $(PROJECT) -scheme nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)
 	mkdir -p $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources
+	cp $(DERIVED)/Build/Products/Debug/nekode-cli $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/MacOS/nekode-cli
 	cp plugins/opencode/plugin.js $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/opencode-plugin.js
 	cp plugins/copilot/hooks/hooks.json $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-hooks.json
 	cp plugins/copilot/hooks/run-hook.sh $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-run-hook.sh
 	cp plugins/copilot-cli/hooks/hooks.json $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-cli-hooks.json
 	cp plugins/copilot-cli/hooks/run-hook.sh $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/copilot-cli-run-hook.sh
+	cp plugins/nekode/hooks/run-hook.sh $(DERIVED)/Build/Products/Debug/Nekode.app/Contents/Resources/cc-run-hook.sh
 
 test:
 	xcodebuild test -project $(PROJECT) -scheme Nekode -configuration Debug -derivedDataPath $(DERIVED) $(SIGN)

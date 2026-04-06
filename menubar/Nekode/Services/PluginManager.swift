@@ -6,6 +6,7 @@ private let logger = Logger(subsystem: "dev.nekode.Nekode", category: "PluginMan
 @MainActor
 class PluginManager: ObservableObject {
     @Published var ccInstalled: Bool = false
+    @Published var ccExists: Bool = false
     @Published var ocInstalled: Bool = false
     @Published var ocConfigExists: Bool = false
     @Published var copilotInstalled: Bool = false
@@ -14,6 +15,9 @@ class PluginManager: ObservableObject {
     @Published var copilotCLIExists: Bool = false
 
     private static let home = FileManager.default.homeDirectoryForCurrentUser
+    private static let ccHooksDir = home.appendingPathComponent(".nekode/plugins/claude/hooks")
+    private static let ccRunHook = ccHooksDir.appendingPathComponent("run-hook.sh")
+    private static let ccSettingsPath = home.appendingPathComponent(".claude/settings.json")
     private static let ocPluginPath = home.appendingPathComponent(".config/opencode/plugins/nekode.js")
     private static let copilotHooksDir = home.appendingPathComponent(".nekode/plugins/copilot/hooks")
     private static let copilotRunHook = copilotHooksDir.appendingPathComponent("run-hook.sh")
@@ -35,9 +39,13 @@ class PluginManager: ObservableObject {
         let fm = FileManager.default
         let home = Self.home
 
-        let ccDir = home.appendingPathComponent(".claude/plugins/cache/nekode")
-        var isDir: ObjCBool = false
-        ccInstalled = fm.fileExists(atPath: ccDir.path, isDirectory: &isDir) && isDir.boolValue
+        // Claude Code exists if ~/.claude/ directory is present (created on first run)
+        let claudeDir = home.appendingPathComponent(".claude")
+        ccExists = fm.fileExists(atPath: claudeDir.path)
+
+        // Claude Code installed = our run-hook.sh exists AND settings.json has our hooks
+        ccInstalled = fm.fileExists(atPath: Self.ccRunHook.path)
+            && ccHooksInClaudeSettings()
 
         let ocConfigDir = home.appendingPathComponent(".config/opencode")
         ocConfigExists = fm.fileExists(atPath: ocConfigDir.path)
@@ -58,6 +66,159 @@ class PluginManager: ObservableObject {
         // Copilot CLI hooks installed = our hooks.json symlinked/present in ~/.copilot/hooks/
         let nekodeHooksJSON = Self.copilotCLIUserHooksDir.appendingPathComponent("nekode-hooks.json")
         copilotCLIInstalled = fm.fileExists(atPath: nekodeHooksJSON.path)
+    }
+
+    // MARK: - Claude Code
+
+    /// The run-hook.sh command prefix injected into ~/.claude/settings.json hooks.
+    /// Points to our managed copy at ~/.nekode/plugins/claude/hooks/run-hook.sh.
+    private static let ccRunHookCommand = "~/.nekode/plugins/claude/hooks/run-hook.sh"
+
+    /// All Claude Code lifecycle events we hook into.
+    private static let ccHookEvents: [(event: String, matcher: String)] = [
+        ("SessionStart", "startup|resume"),
+        ("UserPromptSubmit", ".*"),
+        ("PreToolUse", ".*"),
+        ("PostToolUse", ".*"),
+        ("Stop", ".*"),
+        ("Notification", ".*"),
+        ("PermissionRequest", ".*"),
+        ("PreCompact", ".*"),
+    ]
+
+    func installClaudeCodePlugin() -> Bool {
+        defer { refresh() }
+
+        do {
+            // Clean up old plugin-cache approach (pre-v1.0.4)
+            let legacyCacheDir = Self.home.appendingPathComponent(".claude/plugins/cache/nekode")
+            if FileManager.default.fileExists(atPath: legacyCacheDir.path) {
+                try? FileManager.default.removeItem(at: legacyCacheDir)
+                logger.info("Removed legacy Claude Code plugin cache")
+            }
+
+            // 1. Copy run-hook.sh to ~/.nekode/plugins/claude/hooks/
+            try installCCHookFiles()
+
+            // 2. Inject hooks config into ~/.claude/settings.json
+            try injectCCHooksIntoClaudeSettings()
+
+            logger.info("Installed Claude Code hooks into ~/.claude/settings.json")
+            return true
+        } catch {
+            logger.error("Failed to install Claude Code hooks: \(error, privacy: .public)")
+            return false
+        }
+    }
+
+    func removeClaudeCodePlugin() -> Bool {
+        defer { refresh() }
+
+        do {
+            // 1. Remove hooks from ~/.claude/settings.json
+            try removeCCHooksFromClaudeSettings()
+
+            // 2. Remove hook files
+            let pluginDir = Self.ccHooksDir.deletingLastPathComponent()
+            if FileManager.default.fileExists(atPath: pluginDir.path) {
+                try FileManager.default.removeItem(at: pluginDir)
+            }
+
+            logger.info("Removed Claude Code hooks")
+            return true
+        } catch {
+            logger.error("Failed to remove Claude Code hooks: \(error, privacy: .public)")
+            return false
+        }
+    }
+
+    private func installCCHookFiles() throws {
+        let fm = FileManager.default
+        try fm.createDirectory(at: Self.ccHooksDir, withIntermediateDirectories: true)
+
+        guard let bundledRunHook = Bundle.main.url(forResource: "cc-run-hook", withExtension: "sh") else {
+            throw PluginError.bundledResourceMissing
+        }
+
+        let runHookData = try Data(contentsOf: bundledRunHook)
+        try runHookData.write(to: Self.ccRunHook, options: .atomic)
+
+        // Make run-hook.sh executable (0o755)
+        try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: Self.ccRunHook.path)
+    }
+
+    private func injectCCHooksIntoClaudeSettings() throws {
+        let settingsURL = Self.ccSettingsPath
+        var settings = try loadJSONObject(from: settingsURL)
+
+        var hooks = settings["hooks"] as? [String: Any] ?? [:]
+
+        for (event, matcher) in Self.ccHookEvents {
+            let hookEntry: [String: Any] = [
+                "matcher": matcher,
+                "hooks": [
+                    [
+                        "type": "command",
+                        "command": "\(Self.ccRunHookCommand) \(event)",
+                    ] as [String: Any],
+                ],
+            ]
+
+            // Merge into existing array for this event — avoid duplicates
+            var eventEntries = hooks[event] as? [[String: Any]] ?? []
+            let alreadyPresent = eventEntries.contains { entry in
+                guard let innerHooks = entry["hooks"] as? [[String: Any]] else { return false }
+                return innerHooks.contains { ($0["command"] as? String)?.contains("nekode") == true }
+            }
+            if !alreadyPresent {
+                eventEntries.append(hookEntry)
+            }
+            hooks[event] = eventEntries
+        }
+
+        settings["hooks"] = hooks
+        try writeJSONObject(settings, to: settingsURL)
+    }
+
+    private func removeCCHooksFromClaudeSettings() throws {
+        let settingsURL = Self.ccSettingsPath
+        guard FileManager.default.fileExists(atPath: settingsURL.path) else { return }
+
+        var settings = try loadJSONObject(from: settingsURL)
+        guard var hooks = settings["hooks"] as? [String: Any] else { return }
+
+        for (event, _) in Self.ccHookEvents {
+            guard var entries = hooks[event] as? [[String: Any]] else { continue }
+            entries.removeAll { entry in
+                guard let innerHooks = entry["hooks"] as? [[String: Any]] else { return false }
+                return innerHooks.contains { ($0["command"] as? String)?.contains("nekode") == true }
+            }
+            if entries.isEmpty {
+                hooks.removeValue(forKey: event)
+            } else {
+                hooks[event] = entries
+            }
+        }
+
+        if hooks.isEmpty {
+            settings.removeValue(forKey: "hooks")
+        } else {
+            settings["hooks"] = hooks
+        }
+        try writeJSONObject(settings, to: settingsURL)
+    }
+
+    private func ccHooksInClaudeSettings() -> Bool {
+        guard let settings = try? loadJSONObject(from: Self.ccSettingsPath),
+              let hooks = settings["hooks"] as? [String: Any],
+              let sessionStart = hooks["SessionStart"] as? [[String: Any]] else {
+            return false
+        }
+        // Check if any SessionStart entry has our nekode command
+        return sessionStart.contains { entry in
+            guard let innerHooks = entry["hooks"] as? [[String: Any]] else { return false }
+            return innerHooks.contains { ($0["command"] as? String)?.contains("nekode") == true }
+        }
     }
 
     // MARK: - opencode

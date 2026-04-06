@@ -57,10 +57,10 @@ final class HookEventTests: XCTestCase {
         XCTAssertEqual(HookEvent.parse(hookName: "Notification", notificationType: "future_type"), .notificationOther)
     }
 
-    // MARK: - Transition.forEvent() — Stop always idles
+    // MARK: - Transition.forEvent() — Stop transitions
 
-    func testStopAlwaysTransitionsToIdle() {
-        XCTAssertEqual(Transition.forEvent(.stop), .idle, "Stop should -> idle")
+    func testStopDefaultTransitionsToNeedsAttention() {
+        XCTAssertEqual(Transition.forEvent(.stop), .needsAttention, "Stop should -> needsAttention (agent done, user needs to look)")
     }
 
     // MARK: - Transition.forEvent() — SessionStart always idles
@@ -85,8 +85,8 @@ final class HookEventTests: XCTestCase {
 
     // MARK: - Transition.forEvent() — Notification transitions
 
-    func testNotificationIdleTransitionsToWaitingInput() {
-        XCTAssertEqual(Transition.forEvent(.notificationIdle), .waitingInput)
+    func testNotificationIdleTransitionsToNeedsAttention() {
+        XCTAssertEqual(Transition.forEvent(.notificationIdle), .needsAttention)
     }
 
     func testNotificationPermissionTransitionsToWaitingPermission() {
@@ -122,10 +122,10 @@ final class HookEventTests: XCTestCase {
         XCTAssertEqual(Transition.forEvent(.stop, source: .copilotCLI), .waitingInput)
     }
 
-    func testStopWithNonCopilotSourceTransitionsToIdle() {
-        XCTAssertEqual(Transition.forEvent(.stop, source: .claude), .idle)
-        XCTAssertEqual(Transition.forEvent(.stop, source: .opencode), .idle)
-        XCTAssertEqual(Transition.forEvent(.stop), .idle)
+    func testStopWithNonCopilotSourceTransitionsToNeedsAttention() {
+        XCTAssertEqual(Transition.forEvent(.stop, source: .claude), .needsAttention)
+        XCTAssertEqual(Transition.forEvent(.stop, source: .opencode), .needsAttention)
+        XCTAssertEqual(Transition.forEvent(.stop), .needsAttention)
     }
 
     // MARK: - Exhaustive transition test
