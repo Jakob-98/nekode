@@ -447,8 +447,10 @@ func isNekodeAppRunning() -> Bool {
 /// Print a warning to stderr if Nekode.app is not running.
 func warnIfAppNotRunning() {
     guard !isNekodeAppRunning() else { return }
-    FileHandle.standardError.write(Data(
-        "\u{001B}[33mwarning:\u{001B}[0m Nekode.app is not running. Sessions will be recorded but no desktop pets will appear.\nLaunch it with: open /Applications/Nekode.app\n".utf8))
+    let msg = "\u{001B}[33mwarning:\u{001B}[0m Nekode.app is not running. "
+        + "Sessions will be recorded but no desktop pets will appear.\n"
+        + "Launch it with: open /Applications/Nekode.app\n"
+    FileHandle.standardError.write(Data(msg.utf8))
 }
 
 // MARK: - Int32 Bool helper

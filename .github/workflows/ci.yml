@@ -38,7 +38,7 @@ jobs:
         run: |
           SMOKE_DIR=$(mktemp -d)
           echo '{"session_id":"ci-test","cwd":"/tmp/proj","hook_event_name":"SessionStart"}' \
-            | NEKODE_SESSIONS_DIR="$SMOKE_DIR" menubar/build/Build/Products/Debug/nekode hook SessionStart
+            | NEKODE_SESSIONS_DIR="$SMOKE_DIR" menubar/build/Build/Products/Debug/nekode-cli hook SessionStart
           SESSION_FILE=$(ls "$SMOKE_DIR"/*.json | head -1)
           test -f "$SESSION_FILE"
           grep -q '"idle"' "$SESSION_FILE"
