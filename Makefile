@@ -29,7 +29,7 @@ clean:
 install:
 	xcodebuild build -project $(PROJECT) -scheme nekode -configuration Release -derivedDataPath $(DERIVED) $(SIGN)
 	mkdir -p ~/.nekode/bin
-	cp $(DERIVED)/Build/Products/Release/nekode ~/.nekode/bin/nekode
+	cp $(DERIVED)/Build/Products/Release/nekode-cli ~/.nekode/bin/nekode
 
 run: build
 	open $(DERIVED)/Build/Products/Debug/Nekode.app

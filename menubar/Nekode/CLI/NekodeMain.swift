@@ -10,7 +10,7 @@ import Foundation
 /// Called by Claude Code / VS Code Copilot hooks, or piped from any command.
 @main
 struct NekodeMain {
-    static let version = "1.0.1"
+    static let version = "1.0.2"
 
     static func main() {
         let args = CommandLine.arguments
@@ -171,6 +171,9 @@ enum HookCommand {
 
 enum WaitCommand {
     static func run(args: [String]) {
+        // Warn early if the GUI app isn't running
+        warnIfAppNotRunning()
+
         // Parse flags
         var name: String?
         var projectPath: String?
@@ -413,6 +416,39 @@ enum WaitCommand {
         print("    -h, --help          Print this help message")
         print("    -V, --version       Print version")
     }
+}
+
+// MARK: - App Detection
+
+/// Check whether Nekode.app (the GUI) is currently running.
+/// Uses the bundle identifier to avoid matching the CLI tool itself.
+func isNekodeAppRunning() -> Bool {
+    // lsappinfo finds GUI apps by bundle ID — works without AppKit
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/lsappinfo")
+    process.arguments = ["info", "-only", "pid", "-app", "dev.nekode.Nekode"]
+
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = FileHandle.nullDevice
+
+    do {
+        try process.run()
+        process.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        // lsappinfo returns something like '"pid"=12345' if running, empty/error if not
+        return output.contains("\"pid\"=")
+    } catch {
+        return false
+    }
+}
+
+/// Print a warning to stderr if Nekode.app is not running.
+func warnIfAppNotRunning() {
+    guard !isNekodeAppRunning() else { return }
+    FileHandle.standardError.write(Data(
+        "\u{001B}[33mwarning:\u{001B}[0m Nekode.app is not running. Sessions will be recorded but no desktop pets will appear.\nLaunch it with: open /Applications/Nekode.app\n".utf8))
 }
 
 // MARK: - Int32 Bool helper

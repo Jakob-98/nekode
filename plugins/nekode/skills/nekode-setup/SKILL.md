@@ -19,7 +19,7 @@ Helps install the Nekode app required for session monitoring.
 ### Step 1: Check if Nekode.app is installed
 
 ```bash
-ls /Applications/Nekode.app/Contents/MacOS/nekode 2>/dev/null || ls ~/Applications/Nekode.app/Contents/MacOS/nekode 2>/dev/null
+ls /Applications/Nekode.app/Contents/MacOS/nekode-cli 2>/dev/null || ls ~/Applications/Nekode.app/Contents/MacOS/nekode-cli 2>/dev/null
 ```
 
 If not found, the user needs to install Nekode.app.
@@ -38,7 +38,7 @@ Download the latest release from https://github.com/Jakob-98/nekode/releases/lat
 ### Step 3: Verify installation
 
 ```bash
-/Applications/Nekode.app/Contents/MacOS/nekode hook --version
+/Applications/Nekode.app/Contents/MacOS/nekode-cli hook --version
 ```
 
 ### Step 4: Launch the app

@@ -24,10 +24,10 @@ echo "$TS SHIM $EVENT $LABEL dispatching" >> "$LOG" 2>/dev/null
 
 if [ -x "$HOME/.nekode/bin/nekode" ]; then
     echo "$INPUT" | "$HOME/.nekode/bin/nekode" hook "$EVENT"
-elif [ -x "/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
-    echo "$INPUT" | /Applications/Nekode.app/Contents/MacOS/nekode hook "$EVENT"
-elif [ -x "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
-    echo "$INPUT" | "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" hook "$EVENT"
+elif [ -x "/Applications/Nekode.app/Contents/MacOS/nekode-cli" ]; then
+    echo "$INPUT" | /Applications/Nekode.app/Contents/MacOS/nekode-cli hook "$EVENT"
+elif [ -x "$HOME/Applications/Nekode.app/Contents/MacOS/nekode-cli" ]; then
+    echo "$INPUT" | "$HOME/Applications/Nekode.app/Contents/MacOS/nekode-cli" hook "$EVENT"
 else
     echo "$TS ERROR run-hook.sh: nekode not found ($LABEL event=$EVENT)" >> "$LOG" 2>/dev/null
 fi

@@ -7,7 +7,7 @@
 #   brew install --cask nekode
 #
 cask "nekode" do
-  version "1.0.1"
+  version "1.0.2"
 
   on_arm do
     url "https://github.com/Jakob-98/nekode/releases/download/v#{version}/nekode-macOS-arm64.zip"
@@ -31,7 +31,7 @@ cask "nekode" do
   depends_on macos: ">= :ventura"
 
   app "Nekode.app"
-  binary "#{appdir}/Nekode.app/Contents/MacOS/nekode"
+  binary "#{appdir}/Nekode.app/Contents/MacOS/nekode-cli", target: "nekode"
 
   zap trash: [
     "~/.nekode",

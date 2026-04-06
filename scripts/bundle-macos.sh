@@ -56,8 +56,9 @@ mkdir -p "$BUILD_DIR"
 APP="$BUILD_DIR/Nekode.app"
 cp -R "$REPO_ROOT/menubar/build/Build/Products/Release/Nekode.app" "$APP"
 
-# Copy nekode CLI into the app bundle
-cp "$REPO_ROOT/menubar/build/Build/Products/Release/nekode" "$APP/Contents/MacOS/nekode"
+# Copy nekode CLI into the app bundle (named nekode-cli to avoid
+# case-insensitive collision with the Nekode GUI binary)
+cp "$REPO_ROOT/menubar/build/Build/Products/Release/nekode-cli" "$APP/Contents/MacOS/nekode-cli"
 
 # Copy opencode plugin into Resources
 mkdir -p "$APP/Contents/Resources"
@@ -77,8 +78,8 @@ while IFS= read -r -d '' nested; do
 done < <(find "$APP/Contents" -depth \( -name "*.bundle" -o -name "*.framework" -o -name "*.xpc" -o -name "*.app" -o -name "*.appex" -o -name "*.dylib" \) -print0)
 
 # Sign nekode CLI
-echo "  Signing nekode..."
-codesign --force --sign - "$APP/Contents/MacOS/nekode"
+echo "  Signing nekode-cli..."
+codesign --force --sign - "$APP/Contents/MacOS/nekode-cli"
 
 # Sign main executable
 echo "  Signing Nekode..."

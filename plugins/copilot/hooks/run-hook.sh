@@ -28,10 +28,10 @@ echo "$TS SHIM(copilot) $EVENT $LABEL dispatching" >> "$LOG" 2>/dev/null
 
 if [ -x "$HOME/.nekode/bin/nekode" ]; then
     echo "$INPUT" | "$HOME/.nekode/bin/nekode" hook --source copilot "$EVENT"
-elif [ -x "/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
-    echo "$INPUT" | /Applications/Nekode.app/Contents/MacOS/nekode hook --source copilot "$EVENT"
-elif [ -x "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" ]; then
-    echo "$INPUT" | "$HOME/Applications/Nekode.app/Contents/MacOS/nekode" hook --source copilot "$EVENT"
+elif [ -x "/Applications/Nekode.app/Contents/MacOS/nekode-cli" ]; then
+    echo "$INPUT" | /Applications/Nekode.app/Contents/MacOS/nekode-cli hook --source copilot "$EVENT"
+elif [ -x "$HOME/Applications/Nekode.app/Contents/MacOS/nekode-cli" ]; then
+    echo "$INPUT" | "$HOME/Applications/Nekode.app/Contents/MacOS/nekode-cli" hook --source copilot "$EVENT"
 else
     echo "$TS ERROR run-hook.sh: nekode not found ($LABEL event=$EVENT)" >> "$LOG" 2>/dev/null
 fi

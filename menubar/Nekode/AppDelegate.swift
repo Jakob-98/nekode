@@ -367,11 +367,11 @@ extension AppDelegate {
 // MARK: - Hook binary installation
 
 extension AppDelegate {
-    /// Symlinks nekode from the app bundle into ~/.nekode/bin/ so hooks can find it.
+    /// Symlinks nekode-cli from the app bundle into ~/.nekode/bin/nekode so hooks can find it.
     func installHookBinaryIfNeeded() {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
-        guard let bundledHook = Bundle.main.url(forAuxiliaryExecutable: "nekode") else { return }
+        guard let bundledHook = Bundle.main.url(forAuxiliaryExecutable: "nekode-cli") else { return }
         let nekodeBin = home.appendingPathComponent(".nekode/bin")
         let symlinkPath = nekodeBin.appendingPathComponent("nekode")
         if let dest = try? fm.destinationOfSymbolicLink(atPath: symlinkPath.path),

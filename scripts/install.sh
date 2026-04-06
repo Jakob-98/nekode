@@ -17,7 +17,8 @@ REPO="Jakob-98/nekode"
 INSTALL_DIR="${NEKODE_INSTALL_DIR:-/Applications}"
 BIN_DIR="/usr/local/bin"
 APP_NAME="Nekode.app"
-CLI_NAME="nekode"
+CLI_NAME="nekode-cli"
+CLI_SYMLINK_NAME="nekode"
 
 # ─── Colors ───
 
@@ -128,7 +129,7 @@ fi
 if [ "${NEKODE_NO_CLI:-}" != "1" ]; then
   CLI_PATH="${INSTALL_DIR}/${APP_NAME}/Contents/MacOS/${CLI_NAME}"
   if [ -f "$CLI_PATH" ]; then
-    info "Symlinking ${CLI_NAME} CLI to ${BIN_DIR}..."
+    info "Symlinking ${CLI_SYMLINK_NAME} CLI to ${BIN_DIR}..."
 
     # Create bin dir if needed (shouldn't be needed on macOS, but just in case)
     if [ ! -d "$BIN_DIR" ]; then
@@ -136,12 +137,12 @@ if [ "${NEKODE_NO_CLI:-}" != "1" ]; then
     fi
 
     # Remove existing symlink/binary
-    if [ -L "${BIN_DIR}/${CLI_NAME}" ] || [ -f "${BIN_DIR}/${CLI_NAME}" ]; then
-      sudo rm -f "${BIN_DIR}/${CLI_NAME}"
+    if [ -L "${BIN_DIR}/${CLI_SYMLINK_NAME}" ] || [ -f "${BIN_DIR}/${CLI_SYMLINK_NAME}" ]; then
+      sudo rm -f "${BIN_DIR}/${CLI_SYMLINK_NAME}"
     fi
 
-    sudo ln -s "$CLI_PATH" "${BIN_DIR}/${CLI_NAME}"
-    ok "CLI available: ${CLI_NAME}"
+    sudo ln -s "$CLI_PATH" "${BIN_DIR}/${CLI_SYMLINK_NAME}"
+    ok "CLI available: ${CLI_SYMLINK_NAME}"
   else
     warn "CLI binary not found at ${CLI_PATH} — skipping symlink"
   fi
@@ -154,7 +155,7 @@ ok "Nekode ${VERSION} installed successfully!"
 printf "\n"
 printf "  ${dim}App:${reset}  ${INSTALL_DIR}/${APP_NAME}\n"
 if [ "${NEKODE_NO_CLI:-}" != "1" ]; then
-  printf "  ${dim}CLI:${reset}  ${BIN_DIR}/${CLI_NAME}\n"
+  printf "  ${dim}CLI:${reset}  ${BIN_DIR}/${CLI_SYMLINK_NAME}\n"
 fi
 printf "\n"
 printf "  Open the app:   ${bold}open ${INSTALL_DIR}/${APP_NAME}${reset}\n"

@@ -26,13 +26,13 @@ final class ForkSessionTests: XCTestCase {
         if let productsDir = ProcessInfo.processInfo
             .environment["BUILT_PRODUCTS_DIR"] {
             hookBinary = (productsDir as NSString)
-                .appendingPathComponent("nekode")
+                .appendingPathComponent("nekode-cli")
         } else {
             hookBinary = URL(fileURLWithPath: #file)
                 .deletingLastPathComponent()
                 .deletingLastPathComponent()
                 .appendingPathComponent(
-                    "build/Build/Products/Debug/nekode"
+                    "build/Build/Products/Debug/nekode-cli"
                 ).path
         }
     }
