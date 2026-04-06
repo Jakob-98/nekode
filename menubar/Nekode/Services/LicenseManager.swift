@@ -42,7 +42,7 @@ final class LicenseManager: ObservableObject {
     private let lsValidateURL = "https://api.lemonsqueezy.com/v1/licenses/validate"
     private let lsDeactivateURL = "https://api.lemonsqueezy.com/v1/licenses/deactivate"
 
-    static let purchaseURL = "https://nekode.dev"
+    static let purchaseURL = "https://pay.nekode.dev/checkout"
 
     private let keychainService = "dev.nekode.Nekode.license"
     private let keychainAccountKey = "licenseKey"

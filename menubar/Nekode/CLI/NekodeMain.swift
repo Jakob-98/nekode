@@ -2,23 +2,22 @@ import Foundation
 
 /// Unified CLI entry point for Nekode.
 ///
-/// Subcommands:
-///   nekode hook [--source <source>] <HookName>   — session hook
-///   nekode wait [--name <n>] [--project <p>]      — pipe monitor
-///   nekode                                         — implicit wait when stdin is a pipe
+/// Usage:
+///   some_command | nekode [--name <n>] [--project <p>]  — pipe monitor
+///   nekode hook [--source <source>] <HookName>          — session hook (used by plugins)
 ///
 /// Called by Claude Code / VS Code Copilot hooks, or piped from any command.
 @main
 struct NekodeMain {
-    static let version = "1.0.4"
+    static let version = "1.0.5"
 
     static func main() {
         let args = CommandLine.arguments
 
-        // No arguments: if stdin is a pipe, default to wait mode
+        // No arguments: if stdin is a pipe, run pipe mode
         if args.count < 2 {
             if !isatty(STDIN_FILENO).boolValue {
-                WaitCommand.run(args: Array(args.dropFirst()))
+                PipeCommand.run(args: Array(args.dropFirst()))
             } else {
                 printTopLevelHelp()
                 exit(0)
@@ -29,8 +28,6 @@ struct NekodeMain {
         switch args[1] {
         case "hook":
             HookCommand.run(args: Array(args.dropFirst(2)))
-        case "wait":
-            WaitCommand.run(args: Array(args.dropFirst(2)))
         case "--version", "-V":
             print("nekode \(version)")
             exit(0)
@@ -38,9 +35,9 @@ struct NekodeMain {
             printTopLevelHelp()
             exit(0)
         default:
-            // If first arg looks like a flag (e.g. --name), treat as implicit wait
+            // If first arg looks like a flag (e.g. --name), treat as pipe mode
             if args[1].hasPrefix("-") && !isatty(STDIN_FILENO).boolValue {
-                WaitCommand.run(args: Array(args.dropFirst()))
+                PipeCommand.run(args: Array(args.dropFirst()))
             } else {
                 FileHandle.standardError.write(
                     Data("nekode: unknown command '\(args[1])'\n".utf8))
@@ -54,15 +51,18 @@ struct NekodeMain {
         print("nekode \(version)")
         print("Desktop cats for your coding agents.\n")
         print("USAGE:")
-        print("    nekode <COMMAND> [OPTIONS]\n")
-        print("COMMANDS:")
-        print("    hook    Handle session hooks (Claude Code, Copilot)")
-        print("    wait    Monitor a piped command as a live session\n")
-        print("PIPE MODE:")
-        print("    some_command | nekode [--name <name>]\n")
+        print("    some_command | nekode [OPTIONS]\n")
+        print("EXAMPLES:")
+        print("    cargo build --release 2>&1 | nekode")
+        print("    npm run build | nekode --name \"npm build\"")
+        print("    make test 2>&1 | nekode --project ~/myapp\n")
         print("OPTIONS:")
-        print("    -h, --help       Print this help message")
-        print("    -V, --version    Print version")
+        print("    --name <name>       Display name for the session")
+        print("    --project <path>    Project directory (default: cwd)")
+        print("    -h, --help          Print this help message")
+        print("    -V, --version       Print version\n")
+        print("INTERNAL:")
+        print("    hook    Handle session hooks (used by editor plugins)")
     }
 }
 
@@ -167,9 +167,9 @@ enum HookCommand {
     }
 }
 
-// MARK: - Wait Subcommand
+// MARK: - Pipe Subcommand
 
-enum WaitCommand {
+enum PipeCommand {
     static func run(args: [String]) {
         // Warn early if the GUI app isn't running
         warnIfAppNotRunning()
@@ -181,7 +181,7 @@ enum WaitCommand {
         while idx < args.count {
             switch args[idx] {
             case "--version", "-V":
-                print("nekode wait \(NekodeMain.version)")
+                print("nekode \(NekodeMain.version)")
                 exit(0)
             case "--help", "-h":
                 printHelp()
@@ -399,17 +399,16 @@ enum WaitCommand {
     }
 
     private static func printHelp() {
-        print("nekode wait \(NekodeMain.version)")
+        print("nekode \(NekodeMain.version)")
         print("Pipe-based session monitoring for Nekode.\n")
         print("Pipe any long-running command through nekode to track it")
         print("as a live session in the Nekode menubar and desktop cats.\n")
         print("USAGE:")
-        print("    some_command | nekode [wait] [OPTIONS]\n")
+        print("    some_command | nekode [OPTIONS]\n")
         print("EXAMPLES:")
         print("    cargo build --release 2>&1 | nekode")
         print("    npm run build | nekode --name \"npm build\"")
-        print(
-            "    make test 2>&1 | nekode wait --name \"tests\" --project ~/myapp\n")
+        print("    make test 2>&1 | nekode --project ~/myapp\n")
         print("OPTIONS:")
         print("    --name <name>       Display name for the session")
         print("    --project <path>    Project directory (default: cwd)")

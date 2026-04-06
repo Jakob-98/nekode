@@ -9,7 +9,7 @@ enum SessionSource: String, Codable, Equatable {
     case copilot        // VS Code Copilot
     case copilotCLI = "copilot-cli"  // GitHub Copilot CLI
     case opencode       // opencode
-    case cli            // nekode wait / pipe-based
+    case cli            // pipe-based (command | nekode)
 
     /// Short label for the menubar UI badge.
     var label: String {

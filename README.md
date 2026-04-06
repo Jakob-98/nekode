@@ -5,7 +5,7 @@
 
 **Desktop cats for keeping track of your agent coding sessions.**
 
-Like Clippy, but useful! A macOS menubar monitor and pixel-art desktop cats for your [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [opencode](https://opencode.ai), and [VS Code Copilot](https://code.visualstudio.com/) sessions. Glance at your desktop to see which agents are working and which ones need you.
+Like Clippy, but useful! A macOS menubar monitor and pixel-art desktop cats for your [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [opencode](https://opencode.ai), [VS Code Copilot](https://code.visualstudio.com/), and [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli) sessions. Glance at your desktop to see which agents are working and which ones need you.
 
 <p align="center">
   <a href="https://nekode.dev">nekode.dev</a>
@@ -19,7 +19,7 @@ Like Clippy, but useful! A macOS menubar monitor and pixel-art desktop cats for 
 
 <table>
   <tr>
-    <td align="center"><strong>3</strong><br>AI agents supported</td>
+    <td align="center"><strong>4</strong><br>AI agents supported</td>
     <td align="center"><strong>0</strong><br>Network requests</td>
     <td align="center"><strong>100%</strong><br>Local & private</td>
     <td align="center"><strong>6</strong><br>Cat colors</td>
@@ -31,7 +31,7 @@ Like Clippy, but useful! A macOS menubar monitor and pixel-art desktop cats for 
 - **Menubar monitor** -- Every active AI session in one floating panel. Agent type, project directory, and color-coded state: working, waiting, needs permission, idle.
 - **Desktop pets** -- Each session spawns a pixel-art cat. It sleeps when idle, walks when working, sits when waiting, and runs toward your cursor when it needs permission.
 - **Jump to any session** -- Click a session card or double-click its cat to jump to the right window. Refocus mode: press a hotkey, numbered badges appear, press a number.
-- **`nekode wait` CLI** -- Pipe any command through `nekode wait`. It gets its own cat that reflects the state of the command. `cargo build | nekode`
+- **Pipe any command** -- Pipe any command into `nekode` to track it as a live session with its own cat. `cargo build | nekode`
 - **Fully private** -- Zero network requests. No analytics or telemetry. All data stays in `~/.nekode/sessions/` as plain JSON files.
 - **Lightweight** -- Native Swift. No Electron. No web views. Under 5 MB. No background services -- just local file watching.
 
@@ -62,7 +62,7 @@ curl -fsSL https://nekode.dev/install.sh | bash
 
 No servers. No accounts. Just local files.
 
-1. **Install the hooks** -- Open Nekode settings and click "Install" next to your agent (Claude Code, opencode, or Copilot). For CLI commands, pipe through `nekode wait`.
+1. **Install the hooks** -- Open Nekode settings and click "Install" next to your agent (Claude Code, opencode, Copilot, or Copilot CLI). For CLI commands, pipe into `nekode`.
 2. **Hooks write JSON** -- Each integration writes session state updates to `~/.nekode/sessions/`. The menubar app watches that directory. That's the entire architecture.
 3. **Cats appear** -- Each session spawns a cat. It mirrors the agent's state. Multiple cats gather in a vibe zone near the bottom of your screen. Double-click to jump to the session.
 
@@ -71,7 +71,8 @@ No servers. No accounts. Just local files.
 | **Claude Code** | Open Nekode settings, click "Install" next to Claude Code. Adds a hook to `~/.claude/hooks/`. |
 | **opencode** | Open Nekode settings, click "Install" next to opencode. Adds the Nekode plugin to your opencode config. |
 | **VS Code Copilot** | Open Nekode settings, click "Install" next to Copilot. Configures VS Code's `chat.agent.hooks` settings. |
-| **CLI** | Pipe any command: `cargo build \| nekode` -- or use `nekode wait` to monitor an interactive process. |
+| **GitHub Copilot CLI** | Open Nekode settings, click "Install" next to Copilot CLI. Hooks into GitHub Copilot in the terminal. |
+| **CLI** | Pipe any command: `cargo build \| nekode` -- optionally use `--name` or `--project` flags. |
 
 ## Privacy
 
@@ -85,7 +86,7 @@ Free. Really. 100% of features work without a license key -- no restrictions, no
 
 Students & OSS maintainers: send an email to [hi@nekode.dev](mailto:hi@nekode.dev) for a free license.
 
-[Purchase a license](https://nekode.dev) | [Or just download it free](https://github.com/Jakob-98/nekode/releases/latest)
+[Purchase a license](https://pay.nekode.dev/checkout) | [Or just download it free](https://github.com/Jakob-98/nekode/releases/latest)
 
 ## Build from source
 
