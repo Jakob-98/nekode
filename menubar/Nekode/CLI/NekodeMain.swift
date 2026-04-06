@@ -10,7 +10,7 @@ import Foundation
 /// Called by Claude Code / VS Code Copilot hooks, or piped from any command.
 @main
 struct NekodeMain {
-    static let version = "1.0.0"
+    static let version = "1.0.1"
 
     static func main() {
         let args = CommandLine.arguments

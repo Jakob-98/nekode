@@ -1,6 +1,6 @@
 {
   "name": "nekode-opencode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nekode session monitor plugin for opencode",
   "main": "plugin.js",
   "license": "SEE LICENSE IN LICENSE",
