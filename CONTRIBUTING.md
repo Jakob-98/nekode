@@ -114,4 +114,4 @@ Open an issue on [GitHub](https://github.com/Jakob-98/nekode/issues). Include:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's [source-available license](LICENSE).
+By contributing, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).

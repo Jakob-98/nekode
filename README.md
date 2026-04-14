@@ -1,7 +1,7 @@
 # Nekode
 
 [![GitHub release](https://img.shields.io/github/v/release/Jakob-98/nekode)](https://github.com/Jakob-98/nekode/releases/latest)
-[![License: Source Available](https://img.shields.io/badge/License-Source_Available-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Desktop cats for keeping track of your agent coding sessions.**
 
@@ -76,17 +76,7 @@ No servers. No accounts. Just local files.
 
 ## Privacy
 
-Zero network requests. No analytics. No telemetry. Session data stays on your machine as plain JSON files in `~/.nekode/sessions/`. The only network access is optional license validation.
-
-## Pricing
-
-Free. Really. 100% of features work without a license key -- no restrictions, no feature gating. You just get a gentle, closeable nag banner. WinRAR-style.
-
-**EUR 9.99** -- one-time payment, lifetime license. Your purchase funds new pixel art and development.
-
-Students & OSS maintainers: send an email to [hi@nekode.dev](mailto:hi@nekode.dev) for a free license.
-
-[Purchase a license](https://pay.nekode.dev/checkout) | [Or just download it free](https://github.com/Jakob-98/nekode/releases/latest)
+Zero network requests. No analytics. No telemetry. Session data stays on your machine as plain JSON files in `~/.nekode/sessions/`.
 
 ## Build from source
 
@@ -103,6 +93,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup.
 
 ## License
 
-Source-available -- see [LICENSE](LICENSE) for full terms.
+MIT -- see [LICENSE](LICENSE) for full terms.
 
 Originally built on [cctop](https://github.com/st0012/cctop) by [Stan Lo](https://github.com/st0012).

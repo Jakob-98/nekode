@@ -30,7 +30,6 @@ struct AmberSegmentedPicker<Value: Hashable>: View {
 
 struct SettingsSection: View {
     @ObservedObject var updater: UpdaterBase
-    @ObservedObject var licenseManager: LicenseManager
     @ObservedObject var pluginManager: PluginManager
     @AppStorage("appearanceMode") private var appearanceMode = "system"
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
@@ -96,8 +95,6 @@ struct SettingsSection: View {
 
     private var appSettingsTab: some View {
         VStack(spacing: 0) {
-            LicenseSection(licenseManager: licenseManager)
-            Divider().padding(.horizontal, 14)
             updateSection
             MonitoredToolsView(
                 pluginManager: pluginManager,
@@ -819,188 +816,6 @@ private struct MonitoredToolsView: View {
     }
 }
 
-// MARK: - License Section
-
-private struct LicenseSection: View {
-    @ObservedObject var licenseManager: LicenseManager
-    @State private var showKeyEntry = false
-    @State private var licenseKeyInput = ""
-    @State private var emailInput = ""
-    @State private var isValidating = false
-    @State private var errorMessage: String?
-    @State private var purchaseHovered = false
-    @State private var enterKeyHovered = false
-    @State private var deactivateHovered = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if licenseManager.status.isLicensed {
-                licensedView
-            } else if showKeyEntry {
-                keyEntryView
-            } else {
-                unlicensedView
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-    }
-
-    // MARK: - Licensed
-
-    private var licensedView: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "checkmark.seal.fill")
-                .foregroundStyle(Color.amber)
-                .font(.system(size: 14))
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Licensed")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.primary)
-                if let email = licenseManager.status.email, !email.isEmpty {
-                    Text(email)
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            Spacer()
-            Button {
-                licenseManager.deactivate()
-            } label: {
-                Text("Deactivate")
-                    .font(.system(size: 10))
-                    .foregroundStyle(deactivateHovered ? Color.primary : Color.textMuted)
-            }
-            .buttonStyle(.plain)
-            .onHover { deactivateHovered = $0 }
-        }
-    }
-
-    // MARK: - Unlicensed
-
-    private var unlicensedView: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Unlicensed")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.textSecondary)
-                Text("All features available \u{2014} no limits")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.textMuted)
-            }
-            Spacer()
-            Button {
-                licenseManager.openPurchasePage()
-            } label: {
-                Text("Purchase")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color.segmentActiveText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.amber)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
-            .buttonStyle(.plain)
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) { showKeyEntry = true }
-            } label: {
-                Text("Enter Key")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(enterKeyHovered ? Color.primary : Color.textMuted)
-                    .underline(enterKeyHovered)
-            }
-            .buttonStyle(.plain)
-            .onHover { enterKeyHovered = $0 }
-        }
-    }
-
-    // MARK: - Key Entry
-
-    private var keyEntryView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Enter License Key")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.textSecondary)
-                Spacer()
-                Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        showKeyEntry = false
-                        errorMessage = nil
-                    }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.textMuted)
-                }
-                .buttonStyle(.plain)
-            }
-
-            TextField("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", text: $licenseKeyInput)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 11, design: .monospaced))
-                .onChange(of: licenseKeyInput) { _ in errorMessage = nil }
-
-            TextField("Email (optional)", text: $emailInput)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 11))
-
-            if let error = errorMessage {
-                Text(error)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.red)
-            }
-
-            HStack {
-                Spacer()
-                if isValidating {
-                    ProgressView()
-                        .controlSize(.small)
-                        .scaleEffect(0.7)
-                } else {
-                    Button {
-                        activateKey()
-                    } label: {
-                        Text("Activate")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(Color.segmentActiveText)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(Color.amber)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(licenseKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-    }
-
-    private func activateKey() {
-        let key = licenseKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else { return }
-        isValidating = true
-        errorMessage = nil
-        Task {
-            let result = await licenseManager.activate(
-                licenseKey: key,
-                email: emailInput.isEmpty ? nil : emailInput
-            )
-            isValidating = false
-            switch result {
-            case .success:
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    showKeyEntry = false
-                    licenseKeyInput = ""
-                    emailInput = ""
-                }
-            case .failure(let error):
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-}
-
 // MARK: - Preview Helpers
 
 @MainActor private class MockUpdater: UpdaterBase {
@@ -1021,30 +836,28 @@ private struct LicenseSection: View {
     return pm
 }
 #Preview("Default") {
-    SettingsSection(updater: DisabledUpdater(), licenseManager: LicenseManager.shared, pluginManager: previewPM()).frame(width: 320).padding()
+    SettingsSection(updater: DisabledUpdater(), pluginManager: previewPM()).frame(width: 320).padding()
 }
 #Preview("Update available") {
     let up = DisabledUpdater(); up.pendingUpdateVersion = "0.7.0"
-    return SettingsSection(updater: up, licenseManager: LicenseManager.shared, pluginManager: previewPM()).frame(width: 320).padding()
+    return SettingsSection(updater: up, pluginManager: previewPM()).frame(width: 320).padding()
 }
 #Preview("OC detected") {
     SettingsSection(
         updater: DisabledUpdater(),
-        licenseManager: LicenseManager.shared,
         pluginManager: previewPM(ocConfig: true)
     ).frame(width: 320).padding()
 }
 #Preview("Both connected") {
     SettingsSection(
         updater: DisabledUpdater(),
-        licenseManager: LicenseManager.shared,
         pluginManager: previewPM(oc: true, ocConfig: true)
     ).frame(width: 320).padding()
 }
 #Preview("Sparkle: update available") {
     let mock = MockUpdater(); mock.pendingUpdateVersion = "0.7.0"
-    return SettingsSection(updater: mock, licenseManager: LicenseManager.shared, pluginManager: previewPM()).frame(width: 320).padding()
+    return SettingsSection(updater: mock, pluginManager: previewPM()).frame(width: 320).padding()
 }
 #Preview("Sparkle: up to date") {
-    SettingsSection(updater: MockUpdater(), licenseManager: LicenseManager.shared, pluginManager: previewPM()).frame(width: 320).padding()
+    SettingsSection(updater: MockUpdater(), pluginManager: previewPM()).frame(width: 320).padding()
 }

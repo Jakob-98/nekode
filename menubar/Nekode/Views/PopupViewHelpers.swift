@@ -95,7 +95,6 @@ struct PanelContentView: View {
     @ObservedObject var sessionManager: SessionManager
     @ObservedObject var historyManager: HistoryManager
     @ObservedObject var updater: UpdaterBase
-    @ObservedObject var licenseManager: LicenseManager
     @ObservedObject var pluginManager: PluginManager
     @ObservedObject var refocus: RefocusController
     @ObservedObject var compactController: CompactModeController
@@ -106,7 +105,6 @@ struct PanelContentView: View {
             sessions: sessionManager.sessions,
             recentProjects: historyManager.recentProjects,
             updater: updater,
-            licenseManager: licenseManager,
             pluginManager: pluginManager,
             refocus: refocus,
             petManager: petManager,
@@ -126,46 +124,46 @@ struct PanelContentView: View {
 
 #if DEBUG
 #Preview("With sessions") {
-    PopupView(sessions: Session.mockSessions, updater: DisabledUpdater(), licenseManager: LicenseManager.shared).frame(width: 320)
+    PopupView(sessions: Session.mockSessions, updater: DisabledUpdater()).frame(width: 320)
 }
 #Preview("Mixed sources") {
-    PopupView(sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared).frame(width: 320)
+    PopupView(sessions: Session.qaShowcase, updater: DisabledUpdater()).frame(width: 320)
 }
 #Preview("Empty") {
-    PopupView(sessions: [], updater: DisabledUpdater(), licenseManager: LicenseManager.shared, pluginManager: PluginManager()).frame(width: 320)
+    PopupView(sessions: [], updater: DisabledUpdater(), pluginManager: PluginManager()).frame(width: 320)
 }
 #Preview("With Tabs") {
     PopupView(
-        sessions: Session.mockSessions, recentProjects: RecentProject.mockRecents, updater: DisabledUpdater(), licenseManager: LicenseManager.shared
+        sessions: Session.mockSessions, recentProjects: RecentProject.mockRecents, updater: DisabledUpdater()
     ).frame(width: 320)
 }
 #Preview("Only Recents") {
     PopupView(
         sessions: [], recentProjects: RecentProject.mockRecents,
-        updater: DisabledUpdater(), licenseManager: LicenseManager.shared, pluginManager: PluginManager()
+        updater: DisabledUpdater(), pluginManager: PluginManager()
     ).frame(width: 320)
 }
 #Preview("Empty Recents Tab") {
     PopupView(
-        sessions: Session.mockSessions, recentProjects: [RecentProject.mock()], updater: DisabledUpdater(), licenseManager: LicenseManager.shared
+        sessions: Session.mockSessions, recentProjects: [RecentProject.mock()], updater: DisabledUpdater()
     ).frame(width: 320)
 }
 #Preview("Refocus") {
     let rc = RefocusController(); rc.isActive = true
     return PopupView(
         sessions: Session.qaShowcase, recentProjects: RecentProject.mockRecents,
-        updater: DisabledUpdater(), licenseManager: LicenseManager.shared, refocus: rc
+        updater: DisabledUpdater(), refocus: rc
     ).frame(width: 320)
 }
 #Preview("Compact") {
     PopupView(
-        sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared,
+        sessions: Session.qaShowcase, updater: DisabledUpdater(),
         isCompact: true, isCompactModeEnabled: true
     ).frame(width: 320)
 }
 #Preview("Compact Expanded") {
     PopupView(
-        sessions: Session.qaShowcase, updater: DisabledUpdater(), licenseManager: LicenseManager.shared,
+        sessions: Session.qaShowcase, updater: DisabledUpdater(),
         isCompactModeEnabled: true
     ).frame(width: 320)
 }

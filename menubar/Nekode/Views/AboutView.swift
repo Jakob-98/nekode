@@ -27,7 +27,7 @@ struct AboutView: View {
                 Text("\u{00A9} 2026 Jakob Serlier")
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textSecondary)
-                Text("Source-available License")
+                Text("MIT License")
                     .font(.system(size: 10))
                     .foregroundStyle(Color.textMuted)
             }

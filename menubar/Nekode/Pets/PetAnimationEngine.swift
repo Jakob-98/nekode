@@ -181,10 +181,6 @@ enum PetPhysics {
     /// Fraction of gap used for attention-seeking collision.
     static let attentionGapFraction: CGFloat = 0.5
 
-    // MARK: - License Nudge
-    /// Denominator for 1-in-N chance of showing license nudge bubble.
-    static let licenseNudgeChance: Int = 20
-
     /// Sensible fallback screen rect when NSScreen.main is nil
     static let fallbackScreen = NSRect(x: 0, y: 0, width: 1440, height: 900)
 }
@@ -904,11 +900,6 @@ enum PetAnimationEngine {
     }
 
     private static func bubbleText(for pet: PetModel) -> String? {
-        // 1-in-20 chance: playful license nudge for unlicensed users
-        if !LicenseManager.shared.status.isLicensed && Int.random(in: 0..<PetPhysics.licenseNudgeChance) == 0 {
-            return licenseNudge()
-        }
-
         switch pet.state {
         case .sitting:
             // Tier-aware idle messages
@@ -963,20 +954,6 @@ enum PetAnimationEngine {
         default:
             return nil
         }
-    }
-
-    /// Playful purchase reminder messages shown by pets (1-in-20 chance).
-    private static func licenseNudge() -> String {
-        [
-            "buy me a license?",
-            "I want a home...",
-            "support my dev?",
-            "adopt me! $9.99",
-            "pls license me",
-            "I work for free!",
-            "treat your dev?",
-            "license = love",
-        ].randomElement()!
     }
 
     /// Short bubble text from the session's current tool activity.
